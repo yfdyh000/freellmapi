@@ -60,9 +60,9 @@ jobs:
               desktop/dist-electron/*.deb
               desktop/dist-electron/latest-linux.yml
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
 
@@ -176,12 +176,13 @@ jobs:
           # uploads. The "Attach installer to release" step below owns publishing.
           npx --no-install electron-builder ${{ matrix.ebArgs }} --publish never
 
-      # Windows-only: pack the green multi-file build with 7-Zip at max
-      # compression. electron-builder's zip target uses zlib/deflate and can't
-      # hit lzma2's ratio on electron-builder's already-compressed Chromium
-      # binaries; a .7z with -mx=9 -m0=lzma2 typically saves another 10-20%.
+      # Windows-only: pack the green multi-file build with 7-Zip using Zstandard
+      # at high compression. electron-builder's zip target uses zlib/deflate and
+      # can't hit ZSTD's ratio on the already-compressed Chromium binaries. ZSTD
+      # is chosen over lzma2: it compresses in seconds instead of ~90s while
+      # staying within a few percentage points on output size.
       # The GitHub Windows runner ships 7-Zip in Program Files with 7z.exe.
-      - name: Compress green 7z (max)
+      - name: Compress green 7z (zstd)
         if: matrix.os == 'windows-2022'
         shell: bash
         run: |
@@ -191,10 +192,10 @@ jobs:
           # Resolve the unpacked dir electron-builder just produced (win-unpacked).
           OUT="FreeLLMAPI-${VERSION}-win-x64.7z"
           "$(ls -d /c/Program\ Files/7-Zip/7z.exe 2>/dev/null | head -n1)" a \
-            -t7z -mx=9 -m0=lzma2 -mmt=on "$OUT" win-unpacked
+            -t7z -m0=zstd -mx=19 -mmt=on "$OUT" win-unpacked
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.glob }}
@@ -202,6 +203,6 @@ jobs:
 
       - name: Attach installer to release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ matrix.glob }}
