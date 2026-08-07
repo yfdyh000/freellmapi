@@ -36,8 +36,11 @@ jobs:
           - os: windows-2022
             ebArgs: --win --x64
             artifact: windows-installer
+            # NSIS installer + green zip (multi-file, unzip-and-run) plus the
+            # auto-update metadata (latest.yml / blockmap).
             glob: |
               desktop/dist-electron/*.exe
+              desktop/dist-electron/*.zip
               desktop/dist-electron/*.blockmap
               desktop/dist-electron/latest.yml
           - os: macos-latest
