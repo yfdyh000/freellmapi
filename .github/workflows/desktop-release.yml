@@ -65,20 +65,24 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
-          # Cache the npm store across runs. desktop/ is NOT a root workspace
-          # (workspaces: shared,server,client,cli), so it has its own lockfile;
-          # hash both so `npm install` and `npm --prefix desktop install` both
-          # hit the cache (saves the ~90s full network install each run).
+          # Cache the npm store (~/.npm, GLOBAL across both installs below —
+          # desktop/ is not a workspace but shares the same store). Omit
+          # cache-dependency-path so the key hashes only the root lockfile:
+          # desktop/package-lock.json churn would otherwise invalidate the
+          # root cache too, making it miss on every run.
           cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            desktop/package-lock.json
 
       - name: Install workspace dependencies
-        run: npm install
+        # npm ci: installs exactly from the lockfile (verified in sync) — faster
+        # than `npm install` (no tree re-resolution) and never mutates the
+        # lockfile, so the npm-store cache key stays stable across runs.
+        # --no-audit/--no-fund: CI release builds don't need the per-run
+        # network audit of 750+ packages (adds tens of seconds); run `npm
+        # audit` manually on a schedule instead.
+        run: npm ci --no-audit --no-fund
 
       - name: Install desktop dependencies
-        run: npm --prefix desktop install
+        run: npm --prefix desktop ci --no-audit --no-fund
 
       # The per-platform window chrome (#703's menu-bar fix) lives in a branch
       # that never executes on a developer's mac. These run on both matrix
