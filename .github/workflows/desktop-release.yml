@@ -184,13 +184,14 @@ jobs:
           # uploads. The "Attach installer to release" step below owns publishing.
           npx --no-install electron-builder ${{ matrix.ebArgs }} --publish never
 
-      # Windows-only: pack the green multi-file build with 7-Zip using Zstandard
-      # at high compression. electron-builder's zip target uses zlib/deflate and
-      # can't hit ZSTD's ratio on the already-compressed Chromium binaries. ZSTD
-      # is chosen over lzma2: it compresses in seconds instead of ~90s while
-      # staying within a few percentage points on output size.
+      # Windows-only: pack the green multi-file build with 7-Zip / LZMA2.
+      # Note: stock 7-Zip (what the runner ships) only DECODES Zstandard — the
+      # zstd encoder exists only in third-party builds — and brotli is absent
+      # from the codec list, so LZMA2 is the best available encoder. The Chromium
+      # binaries are already compressed, so -mx=7 gives virtually the same size
+      # as -mx=9 while being faster and using half the memory.
       # The GitHub Windows runner ships 7-Zip in Program Files with 7z.exe.
-      - name: Compress green 7z (zstd)
+      - name: Compress green 7z (lzma2)
         if: matrix.os == 'windows-2022'
         shell: bash
         run: |
@@ -200,7 +201,7 @@ jobs:
           # Resolve the unpacked dir electron-builder just produced (win-unpacked).
           OUT="FreeLLMAPI-${VERSION}-win-x64.7z"
           "$(ls -d /c/Program\ Files/7-Zip/7z.exe 2>/dev/null | head -n1)" a \
-            -t7z -m0=zstd -mx=19 -mmt=on "$OUT" win-unpacked
+            -t7z -m0=lzma2 -mx=7 -mmt=on "$OUT" win-unpacked
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v7
