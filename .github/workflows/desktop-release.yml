@@ -36,11 +36,12 @@ jobs:
           - os: windows-2022
             ebArgs: --win --x64
             artifact: windows-installer
-            # NSIS installer + green zip (multi-file, unzip-and-run) plus the
-            # auto-update metadata (latest.yml / blockmap).
+            # NSIS installer + green zip (multi-file, unzip-and-run) + max-ratio
+            # .7z (lzma2) plus auto-update metadata (latest.yml / blockmap).
             glob: |
               desktop/dist-electron/*.exe
               desktop/dist-electron/*.zip
+              desktop/dist-electron/*.7z
               desktop/dist-electron/*.blockmap
               desktop/dist-electron/latest.yml
           - os: macos-latest
@@ -174,6 +175,23 @@ jobs:
           # so latest*.yml update metadata gets GENERATED, not so electron-builder
           # uploads. The "Attach installer to release" step below owns publishing.
           npx --no-install electron-builder ${{ matrix.ebArgs }} --publish never
+
+      # Windows-only: pack the green multi-file build with 7-Zip at max
+      # compression. electron-builder's zip target uses zlib/deflate and can't
+      # hit lzma2's ratio on electron-builder's already-compressed Chromium
+      # binaries; a .7z with -mx=9 -m0=lzma2 typically saves another 10-20%.
+      # The GitHub Windows runner ships 7-Zip in Program Files with 7z.exe.
+      - name: Compress green 7z (max)
+        if: matrix.os == 'windows-2022'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd desktop/dist-electron
+          VERSION=$(node -p "require('../package.json').version")
+          # Resolve the unpacked dir electron-builder just produced (win-unpacked).
+          OUT="FreeLLMAPI-${VERSION}-win-x64.7z"
+          "$(ls -d /c/Program\ Files/7-Zip/7z.exe 2>/dev/null | head -n1)" a \
+            -t7z -mx=9 -m0=lzma2 -mmt=on "$OUT" win-unpacked
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
