@@ -1,0 +1,38 @@
+# Pre-builds the Tauri shell's debug target on a fast CI runner and ships the
+# compiled target/ as an artifact. The local machine (old 4-core CPU + HDD)
+# downloads this cache instead of doing the 30-60 min full compile itself, so
+# local builds stay incremental (~2 min). Runs on the private YF-my repo.
+name: tauri-target-cache
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - my/tauri
+    paths:
+      - 'desktop/src-tauri/**'
+
+jobs:
+  build-target:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Pin to the exact local toolchain (1.97.1) so fingerprints match and the
+      # downloaded cache is usable locally; a newer stable would invalidate it.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.97.1'
+
+      - name: Build debug target
+        run: cargo build --manifest-path desktop/src-tauri/Cargo.toml
+
+      - name: Package target dir
+        shell: pwsh
+        run: tar -czf target.tar.gz -C desktop/src-tauri/target .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tauri-target-win
+          path: target.tar.gz
+          retention-days: 30
