@@ -18,8 +18,8 @@
     "icon": ["icons/icon.ico", "icons/icon.png"],
     "externalBin": ["binaries/freellmapi-sidecar"],
     "resources": {
-      "../sea-test/node_modules/": "node_modules/",
-      "../../client/dist/": "client-dist/"
+      "binaries/node_modules/": "node_modules/",
+      "binaries/client-dist/": "client-dist/"
     },
     "windows": {
       "webviewInstallMode": {
