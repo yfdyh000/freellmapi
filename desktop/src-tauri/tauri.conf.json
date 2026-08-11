@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "FreeLLMAPI_Tauri",
+  "version": "0.1.0",
+  "identifier": "com.freellmapi.desktop.tauri",
+  "build": {
+    "frontendDist": "../renderer"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/icon.ico", "icons/icon.png"],
+    "externalBin": ["../sea-test/freellmapi-sidecar"],
+    "resources": {
+      "../sea-test/node_modules/": "node_modules/",
+      "../../client/dist/": "client-dist/"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
+  }
+}

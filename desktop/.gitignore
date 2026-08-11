@@ -4,6 +4,11 @@ dist-electron/
 client-dist/
 # SEA sidecar build artifacts (exe/blob/native-module staging tree)
 sea-test/
+# Tauri shell build artifacts
+src-tauri/target/
+src-tauri/binaries/
+# Local-only cargo config (points at W: build dir on this machine)
+src-tauri/.cargo/
 .DS_Store
 
 # Monetization planning — private, never committed

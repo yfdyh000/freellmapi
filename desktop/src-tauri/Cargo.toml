@@ -1,0 +1,32 @@
+[package]
+name = "freellmapi-tauri"
+version = "0.1.0"
+description = "FreeLLMAPI menu-bar app — Tauri shell (tray + popover + embedded server via Node SEA sidecar)"
+edition = "2021"
+rust-version = "1.77.2"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-shell = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+url = "2"
+
+# Shell size matters (user priority: smallest installed footprint); these are
+# the official App Size recommendations (v2.tauri.app/concept/size).
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
+
+# Dev loop on a slow machine (4-core 2011 CPU + HDD target dir): drop
+# debuginfo to cut compile time and artifact size; keep fast no-opt deps.
+[profile.dev]
+debug = false
