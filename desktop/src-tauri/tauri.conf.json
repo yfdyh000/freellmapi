@@ -16,7 +16,7 @@
     "active": true,
     "targets": ["nsis"],
     "icon": ["icons/icon.ico", "icons/icon.png"],
-    "externalBin": ["../sea-test/freellmapi-sidecar"],
+    "externalBin": ["binaries/freellmapi-sidecar"],
     "resources": {
       "../sea-test/node_modules/": "node_modules/",
       "../../client/dist/": "client-dist/"

@@ -24,6 +24,16 @@ jobs:
         with:
           toolchain: '1.97.1'
 
+      # tauri-build validates externalBin existence at build time. The real
+      # SEA sidecar is produced by desktop/scripts/build-sidecar-sea.mjs and
+      # lives only in the local gitignored binaries/ dir; on CI, stub it so
+      # the shell's compile-only target cache can be built.
+      - name: Stub sidecar binary (existence check only)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path desktop/src-tauri/binaries | Out-Null
+          New-Item -ItemType File -Force -Path desktop/src-tauri/binaries/freellmapi-sidecar-x86_64-pc-windows-msvc.exe | Out-Null
+
       - name: Build debug target
         run: cargo build --manifest-path desktop/src-tauri/Cargo.toml
 
