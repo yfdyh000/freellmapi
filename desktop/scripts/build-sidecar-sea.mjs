@@ -1,6 +1,6 @@
 // Builds the Node sidecar for the Tauri shell as a single self-contained
-// executable (SEA + UPX), plus the native-module resource tree that must sit
-// next to it. P0-verified on Windows / Node 24.19.0.
+// executable (SEA), plus the native-module resource tree that must sit next
+// to it. P0-verified on Windows / Node 24.19.0.
 //
 // Steps:
 //   1. esbuild-bundle desktop/src/sidecar.ts → build/sidecar.cjs (CJS: Node 24
@@ -9,12 +9,14 @@
 //      from the node_modules placed next to the exe).
 //   2. node --experimental-sea-config → preparation blob.
 //   3. copy node.exe + postject-inject the blob → <name>-<triple>.exe.
-//   4. upx --best --lzma (lossless; runtime behavior unchanged, keeps dev
-//      debugging parity — deliberate choice over trimming node's ICU/etc.).
-//   5. copy node_modules/{better-sqlite3,bindings} beside the exe.
+//   4. copy node_modules (transitive deps of better-sqlite3) beside the exe.
+//
+// UPX is RELEASE-ONLY: compression costs time on slow machines and buys
+// nothing in dev (installed footprint only matters for published builds).
+// Pass --upx-level best|1|7… to enable (CI/release uses `best`).
 //
 // Output: <outDir>/<name>-<targetTriple>.exe + <outDir>/node_modules/...
-// Usage:  node scripts/build-sidecar-sea.mjs [--no-upx] [--out <dir>]
+// Usage:  node scripts/build-sidecar-sea.mjs [--upx-level best] [--out <dir>]
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -26,7 +28,7 @@ const repoRoot = path.resolve(__dirname, '../..');
 const desktopDir = path.resolve(repoRoot, 'desktop');
 
 const args = process.argv.slice(2);
-const useUpx = !args.includes('--no-upx');
+const upxLevel = args[args.indexOf('--upx-level') + 1];
 const outDir = path.resolve(
   args[args.indexOf('--out') + 1] ?? path.join(desktopDir, 'sea-test'),
 );
@@ -75,10 +77,12 @@ run(
   ],
 );
 
-// 4. UPX (lossless). Missing upx → warn and keep the raw exe.
-if (useUpx) {
+// 4. UPX — release-only (see header). Dev builds skip it entirely.
+if (upxLevel) {
+  const flags =
+    upxLevel === 'best' ? ['--best', '--lzma'] : [`-${upxLevel}`, '--lzma'];
   try {
-    run('upx', ['--best', '--lzma', exePath]);
+    run('upx', [...flags, exePath]);
   } catch (err) {
     console.warn('[build-sidecar-sea] upx not available; skipping compression.');
   }
