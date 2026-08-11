@@ -2,6 +2,8 @@ node_modules/
 build/
 dist-electron/
 client-dist/
+# SEA sidecar build artifacts (exe/blob/native-module staging tree)
+sea-test/
 .DS_Store
 
 # Monetization planning — private, never committed
