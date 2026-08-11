@@ -31,7 +31,9 @@ async function main(): Promise<void> {
   const { port } = await startServer({ dbPath, clientDist, host, preferredPort });
   ensureSessionToken();
 
-  console.log(`[sidecar] READY port=${port}`);
+  // Machine-readable contract with the Tauri shell: exactly "READY port=N" on
+  // its own line (the shell parses it with a contains() match, no prefix).
+  console.log(`READY port=${port}`);
 }
 
 main().catch((err) => {

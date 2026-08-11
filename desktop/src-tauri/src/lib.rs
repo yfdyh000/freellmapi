@@ -55,8 +55,13 @@ fn spawn_sidecar(app: &AppHandle) -> Result<CommandChild, Box<dyn std::error::Er
         while let Some(event) = rx.recv().await {
             if let CommandEvent::Stdout(line) = event {
                 let text = String::from_utf8_lossy(&line);
-                if let Some(port) = text.trim().strip_prefix("READY port=") {
-                    open_dashboard(&handle, port);
+                // Contains-match (not strip_prefix): tolerate any logging
+                // prefix on the sidecar's "READY port=N" contract line.
+                if let Some(idx) = text.find("READY port=") {
+                    let rest = text[idx + "READY port=".len()..].trim();
+                    if let Some(port) = rest.split_whitespace().next() {
+                        open_dashboard(&handle, port);
+                    }
                 }
             }
         }
