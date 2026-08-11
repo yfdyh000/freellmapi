@@ -224,6 +224,27 @@
   </div>
 
 <script>
+  // Tauri bridge — replaces Electron's contextBridge surface (window.freeapi).
+  // Tauri 2 injects __TAURI_INTERNALS__ (with invoke) into its own pages.
+  const __invoke = window.__TAURI_INTERNALS__?.invoke;
+  // Must be on `window` (not a bare const): the page's handlers call the
+  // same `window.freeapi.*` surface the Electron contextBridge exposed.
+  window.freeapi = {
+    snapshot: () => __invoke('get_snapshot'),
+    openDashboard: () => __invoke('open_dashboard'),
+    copyBaseUrl: () => __invoke('copy_base_url'),
+    copyApiKey: () => __invoke('copy_api_key'),
+    quit: () => __invoke('quit_app'),
+    setLoginItem: (on) => __invoke('set_login_item', { on }),
+    // Pull model in the slim P2: refresh on window focus (the shell shows
+    // this window on tray click), no push events yet.
+    onRefresh: () => {},
+  };
+  window.addEventListener('focus', () => refresh());
+
+  // Diagnostics (minimal): surface bridge/command errors in the version slot.
+  const dbg = (msg) => { const v = document.getElementById('version'); if (v) v.textContent = 'DBG ' + msg; };
+
   const $ = (id) => document.getElementById(id);
   const fmt = (n) => n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(1) + 'k' : String(n);
 
@@ -260,30 +281,36 @@
 
   let loginOn = false;
   async function refresh() {
-    const s = await window.freeapi.snapshot();
-    S = s.strings || {};
-    document.body.classList.toggle('light', s.theme === 'light');
-    // Localize the static labels.
-    setText('status-label', S.running);
-    setText('l-reqs', S.requestsToday);
-    setText('l-tokens', S.tokensToday);
-    setText('lastmodel-label', S.lastModel);
-    setText('open', S.openDashboard);
-    setText('copyurl', S.copyUrl);
-    setText('copykey', S.copyKey);
-    setText('login-label', S.startAtLogin);
-    setText('quit', S.quit);
-    setText('ax-ago', S.hoursAgo);
-    setText('ax-now', S.now);
-    $('addr').textContent = '127.0.0.1:' + s.port;
-    $('reqs').textContent = fmt(s.requests);
-    $('tokens').textContent = fmt(s.tokens);
-    $('rate').textContent = s.successRate == null ? '' : (S.successSuffix || '{n}% success').replace('{n}', s.successRate);
-    $('model').textContent = s.lastModel;
-    $('version').textContent = s.version ? 'v' + s.version : '';
-    loginOn = s.loginItem;
-    $('login').classList.toggle('on', loginOn);
-    drawChart(s.hourly);
+    if (!window.__TAURI_INTERNALS__) { dbg('no internals'); return; }
+    try {
+      const s = await window.freeapi.snapshot();
+      S = s.strings || {};
+      document.body.classList.toggle('light', s.theme === 'light');
+      // Localize the static labels.
+      setText('status-label', S.running);
+      setText('l-reqs', S.requestsToday);
+      setText('l-tokens', S.tokensToday);
+      setText('lastmodel-label', S.lastModel);
+      setText('open', S.openDashboard);
+      setText('copyurl', S.copyUrl);
+      setText('copykey', S.copyKey);
+      setText('login-label', S.startAtLogin);
+      setText('quit', S.quit);
+      setText('ax-ago', S.hoursAgo);
+      setText('ax-now', S.now);
+      $('addr').textContent = '127.0.0.1:' + s.port;
+      $('reqs').textContent = fmt(s.requests);
+      $('tokens').textContent = fmt(s.tokens);
+      $('rate').textContent = s.successRate == null ? '' : (S.successSuffix || '{n}% success').replace('{n}', s.successRate);
+      $('model').textContent = s.lastModel;
+      $('version').textContent = s.version ? 'v' + s.version : '';
+      loginOn = !!s.loginItem;
+      $('login').classList.toggle('on', loginOn);
+      drawChart(s.hourly);
+    } catch (e) {
+      dbg('snap: ' + (e && e.message ? e.message : String(e)));
+      console.error('popover snapshot failed', e);
+    }
   }
 
   function flash(btn, label) {
@@ -292,14 +319,15 @@
     setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1100);
   }
 
-  $('open').addEventListener('click', () => window.freeapi.openDashboard());
-  $('copyurl').addEventListener('click', (e) => { window.freeapi.copyBaseUrl(); flash(e.target, S.copied || 'Copied ✓'); });
-  $('copykey').addEventListener('click', (e) => { window.freeapi.copyApiKey(); flash(e.target, S.copied || 'Copied ✓'); });
-  $('quit').addEventListener('click', () => window.freeapi.quit());
-  $('login').addEventListener('click', () => {
+  $('open').addEventListener('click', (e) => { try { window.freeapi.openDashboard(); } catch (err) { dbg('open: ' + err); } });
+  $('copyurl').addEventListener('click', (e) => { try { window.freeapi.copyBaseUrl(); flash(e.target, 'Copied ✓'); } catch (err) { dbg('cpy: ' + err); } });
+  $('copykey').addEventListener('click', (e) => { try { window.freeapi.copyApiKey(); flash(e.target, 'Copied ✓'); } catch (err) { dbg('cpyk: ' + err); } });
+  $('quit').addEventListener('click', () => { try { window.freeapi.quit(); } catch (err) { dbg('quit: ' + err); } });
+  $('login').addEventListener('click', async () => {
     loginOn = !loginOn;
     $('login').classList.toggle('on', loginOn);
-    window.freeapi.setLoginItem(loginOn);
+    try { await window.freeapi.setLoginItem(loginOn); }
+    catch (err) { dbg('autostart: ' + (err && err.message ? err.message : String(err))); }
   });
 
   window.freeapi.onRefresh(refresh);

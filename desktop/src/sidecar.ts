@@ -8,7 +8,8 @@
 // top-level-await and loader limits; CJS avoids both).
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { startServer, ensureSessionToken } from './server-host.ts';
+import { startServer, ensureSessionToken, getUnifiedApiKey } from './server-host.ts';
+import { normalizeLocale, nativeStrings } from './i18n.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -30,11 +31,17 @@ async function main(): Promise<void> {
 
   const { port } = await startServer({ dbPath, clientDist, host, preferredPort });
   const token = ensureSessionToken();
+  const apiKey = getUnifiedApiKey();
+  const locale = normalizeLocale(
+    process.env.FREEAPI_LOCALE ?? Intl.DateTimeFormat().resolvedOptions().locale,
+  );
 
-  // Machine-readable contract with the Tauri shell. TOKEN MUST come before
-  // READY: the shell opens the dashboard (and injects the token) as soon as
-  // it sees READY, so the token has to already be parsed by then.
+  // Machine-readable contract with the Tauri shell (contains-matched lines).
+  // TOKEN/API_KEY/STRINGS MUST come before READY: the shell opens the
+  // dashboard (and injects the token) as soon as it sees READY.
   console.log(`TOKEN=${token}`);
+  console.log(`API_KEY=${apiKey}`);
+  console.log(`STRINGS=${JSON.stringify(nativeStrings(locale))}`);
   console.log(`READY port=${port}`);
 }
 

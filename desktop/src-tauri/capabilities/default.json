@@ -6,6 +6,9 @@
   "permissions": [
     "core:default",
     "dialog:default",
+    "autostart:default",
+    "clipboard-manager:allow-write-text",
+    "positioner:default",
     {
       "identifier": "shell:allow-spawn",
       "allow": [
