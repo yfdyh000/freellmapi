@@ -84,8 +84,22 @@ if (useUpx) {
   }
 }
 
-// 5. native-module resource tree next to the exe
-for (const pkg of ['better-sqlite3', 'bindings']) {
+// 5. native-module resource tree next to the exe. better-sqlite3 pulls in
+// bindings, which pulls in file-uri-to-path — collect the whole transitive
+// dep set from the hoisted root node_modules so the SEA's createRequire
+// resolution (exe dir → node_modules) never hits MODULE_NOT_FOUND.
+function collectPkgs(root, name, out) {
+  if (out.has(name)) return out;
+  out.add(name);
+  const pkgJson = path.join(root, 'node_modules', name, 'package.json');
+  if (!fs.existsSync(pkgJson)) return out;
+  const deps = JSON.parse(fs.readFileSync(pkgJson, 'utf8')).dependencies ?? {};
+  for (const dep of Object.keys(deps)) collectPkgs(root, dep, out);
+  return out;
+}
+
+const pkgs = collectPkgs(repoRoot, 'better-sqlite3', new Set());
+for (const pkg of pkgs) {
   const src = path.join(repoRoot, 'node_modules', pkg);
   const dst = path.join(outDir, 'node_modules', pkg);
   fs.rmSync(dst, { recursive: true, force: true });
