@@ -9,9 +9,15 @@ use tauri_plugin_shell::ShellExt;
 
 const DEFAULT_PORT: u16 = 31415;
 
-/// Holds the spawned sidecar child so it can be killed on exit.
+/// Shell state: the spawned sidecar child (killed on exit), the dashboard
+/// session token reported by the sidecar (auto-login), and a pending port
+/// for when READY arrives before TOKEN (either order must work).
 #[derive(Default)]
-struct Sidecar(Mutex<Option<CommandChild>>);
+struct Sidecar {
+    child: Mutex<Option<CommandChild>>,
+    token: Mutex<Option<String>>,
+    pending_port: Mutex<Option<String>>,
+}
 
 /// Independent data dir (<appData>/FreeLLMAPI_Tauri) — mirrors the bun branch's
 /// FreeLLMAPI_Bun: the Tauri build must not touch the Electron app's real data
@@ -55,12 +61,44 @@ fn spawn_sidecar(app: &AppHandle) -> Result<CommandChild, Box<dyn std::error::Er
         while let Some(event) = rx.recv().await {
             if let CommandEvent::Stdout(line) = event {
                 let text = String::from_utf8_lossy(&line);
+                let text = text.trim();
                 // Contains-match (not strip_prefix): tolerate any logging
-                // prefix on the sidecar's "READY port=N" contract line.
-                if let Some(idx) = text.find("READY port=") {
-                    let rest = text[idx + "READY port=".len()..].trim();
-                    if let Some(port) = rest.split_whitespace().next() {
-                        open_dashboard(&handle, port);
+                // prefix on the sidecar's contract lines. Opening the
+                // dashboard needs BOTH the port and the token; whichever
+                // arrives first is remembered (event order is line-based
+                // but must not be relied upon).
+                if let Some(idx) = text.find("TOKEN=") {
+                    let token = text[idx + "TOKEN=".len()..].trim().to_string();
+                    *handle.state::<Sidecar>().token.lock().unwrap() = Some(token);
+                    if let Some(port) = handle
+                        .state::<Sidecar>()
+                        .pending_port
+                        .lock()
+                        .unwrap()
+                        .take()
+                    {
+                        open_dashboard(&handle, &port);
+                    }
+                } else if let Some(idx) = text.find("READY port=") {
+                    if let Some(port) = text[idx + "READY port=".len()..]
+                        .split_whitespace()
+                        .next()
+                    {
+                        let ready = handle
+                            .state::<Sidecar>()
+                            .token
+                            .lock()
+                            .unwrap()
+                            .is_some();
+                        if ready {
+                            open_dashboard(&handle, port);
+                        } else {
+                            *handle
+                                .state::<Sidecar>()
+                                .pending_port
+                                .lock()
+                                .unwrap() = Some(port.to_string());
+                        }
                     }
                 }
             }
@@ -76,12 +114,32 @@ fn open_dashboard(app: &AppHandle, port: &str) {
         let _ = win.set_focus();
         return;
     }
+
+    // Auto-login + desktop-mode flags, injected before any page script runs —
+    // mirrors the Electron preload / Electrobun injected-preload behaviour.
+    let token = app.state::<Sidecar>().token.lock().unwrap().clone().unwrap_or_default();
+    let version = app.package_info().version.to_string();
+    let script = format!(
+        r#"try {{
+  localStorage.setItem('freellmapi_dashboard_token', {token:?});
+}} catch (e) {{}}
+window.__FREEAPI_DESKTOP__ = true;
+window.__FREEAPI_VERSION__ = {version:?};
+var __d = document.documentElement;
+if (__d) __d.classList.add('desktop');
+else document.addEventListener('DOMContentLoaded', function () {{ document.documentElement.classList.add('desktop'); }});
+"#,
+        token = token,
+        version = version,
+    );
+
     let url = WebviewUrl::External(
         url::Url::parse(&format!("http://127.0.0.1:{port}")).expect("valid url"),
     );
     if let Err(err) = WebviewWindowBuilder::new(app, "dashboard", url)
         .title("FreeLLMAPI")
         .inner_size(1200.0, 800.0)
+        .initialization_script(&script)
         .build()
     {
         eprintln!("[tauri] failed to open dashboard: {err}");
@@ -125,7 +183,7 @@ pub fn run() {
             build_tray(app.handle())?;
 
             let child = spawn_sidecar(app.handle())?;
-            app.state::<Sidecar>().0.lock().unwrap().replace(child);
+            app.state::<Sidecar>().child.lock().unwrap().replace(child);
 
             Ok(())
         })
@@ -133,7 +191,7 @@ pub fn run() {
         .expect("error while building tauri application")
         .run(|app, event| {
             if let RunEvent::ExitRequested { .. } = event {
-                if let Some(child) = app.state::<Sidecar>().0.lock().unwrap().take() {
+                if let Some(child) = app.state::<Sidecar>().child.lock().unwrap().take() {
                     let _ = child.kill();
                 }
             }

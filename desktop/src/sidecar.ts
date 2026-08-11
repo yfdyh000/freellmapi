@@ -29,10 +29,12 @@ async function main(): Promise<void> {
   const preferredPort = Number(arg('--port') ?? '31415');
 
   const { port } = await startServer({ dbPath, clientDist, host, preferredPort });
-  ensureSessionToken();
+  const token = ensureSessionToken();
 
-  // Machine-readable contract with the Tauri shell: exactly "READY port=N" on
-  // its own line (the shell parses it with a contains() match, no prefix).
+  // Machine-readable contract with the Tauri shell. TOKEN MUST come before
+  // READY: the shell opens the dashboard (and injects the token) as soon as
+  // it sees READY, so the token has to already be parsed by then.
+  console.log(`TOKEN=${token}`);
   console.log(`READY port=${port}`);
 }
 
