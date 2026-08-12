@@ -1,0 +1,142 @@
+# Builds the Tauri shell's NSIS installer on CI and, on a semver tag, attaches
+# it to the GitHub Release. The installer bundles the Node SEA sidecar + native
+# modules + client frontend inside a single .exe (WebView2 uses the system
+# runtime, 0 MB shipped).
+#
+# Separate from the Electron desktop-release.yml: Tauri has its own Rust
+# compile pipeline, frontendDist is pre-built (renderer/), and the sidecar is
+# built via SEA+UPX. Triggered on semver tags (v0.7.0) so they never overlap
+# with the Electron date-format tags (v2026-08-11).
+#
+# Triggers:
+#   - workflow_dispatch             manual build (artifacts only)
+#   - push tags 'v*.*.*'            build + attach the installer to the release
+#   - push my/tauri (paths filter)  branch push smoke test
+#   - pull_request (paths filter)   PR smoke test
+#
+# Two jobs: build-sidecar (npm + esbuild + SEA + UPX), then build-tauri (Rust
+# + tauri-bundler + NSIS). The sidecar artifact is passed between jobs.
+
+name: Tauri release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+    branches:
+      - my/tauri
+    paths:
+      - 'desktop/src-tauri/**'
+      - 'desktop/scripts/**'
+      - '.github/workflows/tauri-release.yml'
+  pull_request:
+    paths:
+      - 'desktop/src-tauri/**'
+      - 'desktop/scripts/**'
+      - '.github/workflows/tauri-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-sidecar:
+    name: Build sidecar (SEA + UPX)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # Pin the local toolchain (1.97.1) so the build-sidecar-sea.mjs script's
+      # `rustc --print host-tuple` produces a consistent target triple.
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.97.1'
+
+      - name: Install workspace dependencies
+        run: npm install
+
+      - name: Install desktop dependencies
+        run: npm --prefix desktop install
+
+      - name: Approve native module build scripts
+        run: npm install-scripts approve
+
+      - name: Build client frontend
+        run: npm run build -w client
+
+      - name: Stage client into desktop
+        run: npm --prefix desktop run stage:client
+
+      - name: Build SEA sidecar (release — UPX best)
+        shell: pwsh
+        run: |
+          node desktop/scripts/build-sidecar-sea.mjs --upx-level best --out "${{ runner.temp }}\sidecar-artifact"
+
+      - name: Stage client-dist next to sidecar
+        shell: pwsh
+        run: |
+          Copy-Item -Recurse -Force desktop/client-dist "${{ runner.temp }}\sidecar-artifact\client-dist"
+
+      - name: Upload sidecar artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sidecar-artifact
+          path: ${{ runner.temp }}\sidecar-artifact
+          if-no-files-found: error
+
+  build-tauri:
+    name: Build Tauri NSIS installer
+    needs: build-sidecar
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.97.1'
+
+      - name: Download sidecar artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sidecar-artifact
+          path: ${{ runner.temp }}\sidecar-artifact
+
+      - name: Stage sidecar + resources into src-tauri/binaries
+        shell: pwsh
+        run: |
+          # Build the staging tree that tauri-build validates at compile time.
+          # externalBin expects: binaries/freellmapi-sidecar-<triple>.exe
+          # resources  expects: binaries/node_modules/ → node_modules/
+          #                     binaries/client-dist/  → client-dist/
+          $bin = "desktop/src-tauri/binaries"
+          New-Item -ItemType Directory -Force -Path "$bin" | Out-Null
+          Copy-Item -Force "${{ runner.temp }}\sidecar-artifact\freellmapi-sidecar-*.exe" "$bin\"
+          Copy-Item -Recurse -Force "${{ runner.temp }}\sidecar-artifact\node_modules" "$bin\"
+          Copy-Item -Recurse -Force "${{ runner.temp }}\sidecar-artifact\client-dist" "$bin\"
+          Get-ChildItem "$bin"
+
+      - name: Build Tauri release (NSIS)
+        shell: pwsh
+        working-directory: desktop/src-tauri
+        run: npx --yes @tauri-apps/cli@^2 build --bundles nsis
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tauri-nsis-installer
+          path: desktop/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+
+      - name: Attach installer to release
+        if: startsWith(github.ref, 'refs/tags/v') && github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: desktop/src-tauri/target/release/bundle/nsis/*.exe
