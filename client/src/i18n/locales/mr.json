@@ -159,6 +159,8 @@
     "notGitInstall": "या इंस्टॉलेशनमध्ये कमिटची माहिती समाविष्ट नाही.",
     "checkFailed": "अपडेट्स तपासता आले नाहीत.",
     "contactsGithub": "तपासणी स्वतः सुरू करावी लागते आणि ती GitHub शी संपर्क साधते.",
+    "autoUpdateCheck": "स्वयंचलित अद्यतन तपासणी",
+    "autoUpdateCheckHelp": "दिवसातून एकदा नवीन रिलीजसाठी GitHub तपासते आणि स्मरणपत्र दाखवते. डीफॉल्टनुसार बंद.",
     "openReleases": "GitHub रिलीजेस उघडा",
     "restartAfterUpdate": "बिल्ड पूर्ण झाल्यानंतर FreeLLMAPI पुन्हा सुरू करा."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "प्रदाते",
     "checklistSummary": "{total} पैकी {configured} प्रदाते कॉन्फिगर केले",
     "checklistKeyless": "की आवश्यक नाही",
+    "checklistNoKeyTip": "अद्याप कोणतीही की जोडलेली नाही. जोडण्यासाठी क्लिक करा.",
+    "checklistKeylessTip": "कीशिवाय काम करते.",
     "tabQuotaSignals": "कोटा सिग्नल",
     "tabApiKey": "युनिफाइड API की",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "प्रोफाइल तयार करा",
     "cpRotate": "की बदला",
     "cpKeyOnce": "ही की आत्ताच कॉपी करा — ती पुन्हा दाखवली जाणार नाही.",
-    "cpEnabledAria": "प्रोफाइल सक्षम"
+    "cpEnabledAria": "प्रोफाइल सक्षम",
+    "selectKey": "ही की निवडा",
+    "bulkSelected": "{count} निवडले",
+    "bulkEnable": "सर्व सक्षम करा",
+    "bulkDisable": "सर्व अक्षम करा",
+    "bulkDelete": "सर्व हटवा",
+    "bulkDeleteConfirm": "{count} हटवायचे?",
+    "bulkResult": "{done} अद्ययावत केले; {failed} अयशस्वी.",
+    "bulkDeleteResult": "{done} हटवले; {failed} अयशस्वी."
   },
   "status": {
     "healthy": "निरोगी",
@@ -841,5 +853,14 @@
     "manualHint": "साधनाच्या स्वतःच्या सेटिंग्जमध्ये टाकण्यासाठी बेस URL आणि की.",
     "endpoint": "एंडपॉइंट",
     "documentation": "दस्तऐवजीकरण"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

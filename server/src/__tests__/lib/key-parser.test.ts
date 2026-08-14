@@ -56,6 +56,8 @@ describe('key parser', () => {
     expect(detectPlatform('NAVYAI_')).toBe('navy');
     expect(detectPlatform('SEALION_')).toBe('sealion');
     expect(detectPlatform('MODELSCOPE_')).toBe('modelscope');
+    expect(detectPlatform('ANYAPI_')).toBe('anyapi');
+    expect(detectPlatform('ANY_API_')).toBe('anyapi');
     expect(detectPlatform('SAMBANOVA_')).toBeNull();
   });
 
@@ -67,6 +69,7 @@ describe('key parser', () => {
     expect(AUTH_JSON_PROVIDER_MAP['api-navy']).toBe('navy');
     expect(AUTH_JSON_PROVIDER_MAP['sea-lion']).toBe('sealion');
     expect(AUTH_JSON_PROVIDER_MAP['model-scope']).toBe('modelscope');
+    expect(AUTH_JSON_PROVIDER_MAP['any-api']).toBe('anyapi');
     const result = parseAuthJson(JSON.stringify({
       credential_pool: {
         gemini: [{ id: '1', label: 'Gemini', auth_type: 'api_key', access_token: 'AIza-test' }],

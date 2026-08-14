@@ -159,6 +159,8 @@
     "notGitInstall": "Tato instalace neobsahuje informace o commitu.",
     "checkFailed": "Aktualizace se nepodařilo zkontrolovat.",
     "contactsGithub": "Kontroly se spouštějí ručně a kontaktují GitHub.",
+    "autoUpdateCheck": "Automatická kontrola aktualizací",
+    "autoUpdateCheckHelp": "Jednou denně zkontroluje na GitHubu novou verzi a zobrazí připomenutí. Ve výchozím nastavení vypnuto.",
     "openReleases": "Otevřít vydání na GitHubu",
     "restartAfterUpdate": "Po dokončení sestavení restartujte FreeLLMAPI."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Poskytovatelé",
     "checklistSummary": "Nastaveno {configured} z {total} poskytovatelů",
     "checklistKeyless": "klíč není potřeba",
+    "checklistNoKeyTip": "Zatím nebyl přidán žádný klíč. Kliknutím jej přidáte.",
+    "checklistKeylessTip": "Funguje bez klíče.",
     "tabQuotaSignals": "Kvótové signály",
     "tabApiKey": "Sjednocený API klíč",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Vytvořit profil",
     "cpRotate": "Obměnit klíč",
     "cpKeyOnce": "Zkopírujte tento klíč hned — už se znovu nezobrazí.",
-    "cpEnabledAria": "Profil povolen"
+    "cpEnabledAria": "Profil povolen",
+    "selectKey": "Vybrat tento klíč",
+    "bulkSelected": "{count} vybráno",
+    "bulkEnable": "Povolit vše",
+    "bulkDisable": "Zakázat vše",
+    "bulkDelete": "Smazat vše",
+    "bulkDeleteConfirm": "Smazat {count}?",
+    "bulkResult": "Aktualizováno {done}; neúspěšné {failed}.",
+    "bulkDeleteResult": "Smazáno {done}; neúspěšné {failed}."
   },
   "status": {
     "healthy": "zdravé",
@@ -841,5 +853,14 @@
     "manualHint": "Základní URL a klíč k zadání do vlastního nastavení nástroje.",
     "endpoint": "Endpoint",
     "documentation": "Dokumentace"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

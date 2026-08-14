@@ -171,9 +171,21 @@ export function createApp(config?: Config) {
       callback(null, !origin || allowedCorsOrigins.has(origin));
     },
   }));
-  // 10mb: code agents (OpenCode, AionUI, Qwen Code) ship very large system
-  // prompts + tool schemas + repo context; 1mb cut their sessions off
-  // mid-conversation with an opaque 413. (#200)
+  // Two-tier JSON body limits. The LLM wire surfaces carry vision payloads —
+  // base64 images inline in the body (~33% inflation; google.ts forwards
+  // images up to 8MB apiece) — so a single-screenshot Codex turn can clear
+  // 10MB and used to 413 HERE, before auth/routing: no fallback attempt, no
+  // analytics row, just an opaque 'request entity too large'. Those surfaces
+  // get the larger REQUEST_BODY_LIMIT_MB ceiling (default 25MB); everything
+  // else keeps the #200 limit — code agents (OpenCode, AionUI, Qwen Code)
+  // ship very large system prompts + tool schemas + repo context, and 1mb cut
+  // their sessions off mid-conversation. body-parser skips requests whose
+  // body was already parsed, so the second parser only sees what the first
+  // didn't own; an over-limit body throws from whichever parser matched.
+  app.use(
+    ['/v1', '/v1beta', '/mcp', '/api/chat', '/api/generate', '/api/embed', '/api/embeddings'],
+    express.json({ limit: cfg.requestBodyLimitBytes }),
+  );
   app.use(express.json({ limit: '10mb' }));
 
   // Caller identity (IP + User-Agent) for request analytics, carried in

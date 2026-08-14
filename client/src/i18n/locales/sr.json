@@ -159,6 +159,8 @@
     "notGitInstall": "Ова инсталација не садржи информације о комиту.",
     "checkFailed": "Провера ажурирања није успела.",
     "contactsGithub": "Провере се покрећу ручно и повезују се са GitHub-ом.",
+    "autoUpdateCheck": "Аутоматска провера ажурирања",
+    "autoUpdateCheckHelp": "Једном дневно проверава GitHub за ново издање и приказује подсетник. Подразумевано искључено.",
     "openReleases": "Отвори GitHub издања",
     "restartAfterUpdate": "Поново покрените FreeLLMAPI након завршетка израде."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Провајдери",
     "checklistSummary": "Подешено {configured} од {total} провајдера",
     "checklistKeyless": "кључ није потребан",
+    "checklistNoKeyTip": "Кључ још није додат. Кликните да бисте га додали.",
+    "checklistKeylessTip": "Ради без кључа.",
     "tabQuotaSignals": "Квотни сигнали",
     "tabApiKey": "Обједињени кључ API",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Направи профил",
     "cpRotate": "Ротирај кључ",
     "cpKeyOnce": "Копирајте овај кључ одмах — неће бити поново приказан.",
-    "cpEnabledAria": "Профил омогућен"
+    "cpEnabledAria": "Профил омогућен",
+    "selectKey": "Изабери овај кључ",
+    "bulkSelected": "{count} изабрано",
+    "bulkEnable": "Омогући све",
+    "bulkDisable": "Онемогући све",
+    "bulkDelete": "Избриши све",
+    "bulkDeleteConfirm": "Избрисати {count}?",
+    "bulkResult": "Ажурирано {done}; неуспешно {failed}.",
+    "bulkDeleteResult": "Избрисано {done}; неуспешно {failed}."
   },
   "status": {
     "healthy": "здраво",
@@ -841,5 +853,14 @@
     "manualHint": "Основни URL и кључ за унос у сопствена подешавања алата.",
     "endpoint": "Крајња тачка",
     "documentation": "Документација"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -13,9 +13,11 @@ import { routeRequest, resolveStickyPreference, routingReserveTokens, type Route
 import { getSetting, getUnifiedApiKey } from '../db/index.js';
 import { contentToString } from '../lib/content.js';
 import { repairToolArguments, toolSchemaMap } from '../lib/tool-args.js';
+import { invalidToolArgumentsError, invalidToolCallReasons, isToolArgumentValidationEnabled } from '../lib/tool-validate.js';
 import { rescueInlineToolCalls, startsWithDialectMarker, couldBecomeDialectMarker, containsDialectMarker } from '../lib/tool-call-rescue.js';
 import { sanitizeProviderErrorMessage } from '../lib/error-redaction.js';
-import { isClientAbortError, newClientAbortError } from '../lib/error-classify.js';
+import { convertDocumentBlock, documentRejectionMessage } from '../lib/anthropic-documents.js';
+import { isClientAbortError, newClientAbortError, newHedgeAbortError, isUpstreamClassificationOutput } from '../lib/error-classify.js';
 import { logRequest } from '../lib/request-log.js';
 import { extractApiToken, timingSafeStringEqual, getStickyModel, setStickyModel } from './proxy.js';
 import { runFallbackLoop, newFallbackState, recordUpstreamSuccess, type ExhaustionBody, setFallbackHeaders, setExhaustionHeaders, type AttemptRecord } from '../lib/fallback-loop.js';
@@ -25,6 +27,7 @@ import { resolveAnthropicModel } from '../services/anthropic-map.js';
 import type { ReasoningEffort } from '../lib/sampling-params.js';
 import { buildModelListing } from '../services/model-listing.js';
 import { compressRequest, formatCompressionHeader } from '../services/compression/pipeline.js';
+import { normalizeMessageImages } from '../lib/image-normalize.js';
 
 // Anthropic-compatible Messages API (`POST /v1/messages`). This is a thin
 // translation layer over the SAME router/fallback/analytics machinery the
@@ -253,10 +256,14 @@ interface ConvertedRequest {
   tool_choice?: ChatToolChoice;
   hasImage: boolean;
   wantsTools: boolean;
+  /** Reasons the request carried documents we cannot convert. Non-empty means
+   *  the caller must be told, not served — see the rejection below. */
+  documentRejections: string[];
 }
 
 function convertRequest(input: AnthropicRequest): ConvertedRequest {
   const messages: ChatMessage[] = [];
+  const documentRejections: string[] = [];
   let hasImage = false;
 
   const system = flattenSystem(input.system);
@@ -307,8 +314,15 @@ function convertRequest(input: AnthropicRequest): ConvertedRequest {
           tool_call_id: String((block as any).tool_use_id ?? ''),
           content: flattenToolResult((block as any).content),
         });
+      } else if (type === 'document') {
+        // A document that is already text costs nothing to inline. One that
+        // needs decoding cannot be served by any provider here, and dropping
+        // it would answer confidently about a document the model never saw.
+        const result = convertDocumentBlock(block);
+        if (result.ok) textParts.push(result.text);
+        else documentRejections.push(result.reason);
       }
-      // Unknown block types (thinking, document, …) are intentionally dropped.
+      // Other unknown block types (thinking, …) are intentionally dropped.
     }
 
     const text = textParts.join('\n');
@@ -346,6 +360,7 @@ function convertRequest(input: AnthropicRequest): ConvertedRequest {
     tool_choice: convertToolChoice(input.tool_choice),
     hasImage,
     wantsTools: (tools?.length ?? 0) > 0,
+    documentRejections,
   };
 }
 
@@ -447,8 +462,23 @@ anthropicRouter.post('/messages', async (req: Request, res: Response) => {
   const { temperature, top_p, stream } = body;
 
   const converted = convertRequest(body);
+  // Rejected before routing, and before compression: this is our verdict, not
+  // a provider's. Entering the failover loop would spend quota on a request
+  // every candidate would fail identically, and book it as provider failure.
+  if (converted.documentRejections.length > 0) {
+    const message = documentRejectionMessage(converted.documentRejections);
+    console.warn(`[anthropic] 400 unsupported document block: ${converted.documentRejections.join('; ')}`);
+    sendError(res, 400, 'invalid_request_error', message);
+    return;
+  }
   let { messages } = converted;
   const { tools, tool_choice, hasImage, wantsTools } = converted;
+  // Downscale over-threshold inline images before compression/estimation so
+  // the budget, routing, and upstream transfer all see the shrunk bytes
+  // (see lib/image-normalize.ts). The cache-control detection below reads the
+  // RAW wire body, and normalization mutates urls in place keeping the blocks
+  // (and any cache_control on them) intact — neither is disturbed.
+  await normalizeMessageImages(messages);
   const systemHasCacheControl = Array.isArray(body.system)
     && body.system.some(block => block && typeof block === 'object' && 'cache_control' in block);
   const messageHasCacheControl = body.messages.some(message =>
@@ -521,26 +551,31 @@ anthropicRouter.post('/messages', async (req: Request, res: Response) => {
   // writableEnded distinguishes a real disconnect.
   let clientGone = false;
   const clientAbort = new AbortController();
+  // Fallback-v2 hedging: the loop aborts this controller (via abortInFlight)
+  // when the wall-clock retry budget expires mid-attempt, canceling the
+  // in-flight upstream instead of waiting for a stalled attempt to time out.
+  const hedgeAbort = new AbortController();
   res.on('close', () => {
     if (!res.writableEnded) {
       clientGone = true;
       clientAbort.abort(newClientAbortError());
     }
   });
-  const dispatchOptions = { ...completionOptions, signal: clientAbort.signal };
+  const dispatchOptions = { ...completionOptions, signal: AbortSignal.any([clientAbort.signal, hedgeAbort.signal]) };
 
   await runFallbackLoop({
     maxRetries: MAX_RETRIES,
     state,
     attemptLog,
     clientGone: () => clientGone,
-    route: () => routeRequest(estimatedTotal, state.skipKeys.size > 0 ? state.skipKeys : undefined, preferredModel, hasImage, wantsTools, state.skipModels.size > 0 ? state.skipModels : undefined),
-    dispatch: async (route, attempt) => {
+    abortInFlight: () => hedgeAbort.abort(newHedgeAbortError()),
+    route: () => routeRequest(estimatedTotal, state.skipKeys.size > 0 ? state.skipKeys : undefined, preferredModel, hasImage, wantsTools, state.skipModels.size > 0 ? state.skipModels : undefined, undefined, false, state.skipPlatforms.size > 0 ? state.skipPlatforms : undefined),
+    dispatch: async (route, attempt, dispatchCtx) => {
       if (stream) {
         try {
           await streamCompletion(res, route, messages, dispatchOptions, {
             start, attempt, attemptLog, clientGone: () => clientGone, requestedModel, estimatedInputTokens, tools, pinnedModelId,
-            sessionId, pinned: resolved.pinned,
+            sessionId, pinned: resolved.pinned, disarmHedge: dispatchCtx.disarmHedge,
           });
           return 'done';
         } catch (err: any) {
@@ -562,6 +597,15 @@ anthropicRouter.post('/messages', async (req: Request, res: Response) => {
       if (!respText && respToolCalls.length === 0) {
         throw Object.assign(
           new Error(`empty completion from ${route.displayName}`),
+          result.choices?.[0]?.finish_reason === 'length' ? { skipBench: true } : {},
+        );
+      }
+      // #809: bare "safe"/"unsafe" classification output from a relay is an
+      // upstream filter, not the requested model — fail over like an empty
+      // completion.
+      if (isUpstreamClassificationOutput(respText, route.platform) && respToolCalls.length === 0) {
+        throw Object.assign(
+          new Error(`empty completion from ${route.displayName} (upstream classification output)`),
           result.choices?.[0]?.finish_reason === 'length' ? { skipBench: true } : {},
         );
       }
@@ -594,6 +638,14 @@ anthropicRouter.post('/messages', async (req: Request, res: Response) => {
           if (tc?.function?.arguments != null) {
             tc.function.arguments = repairToolArguments(tc.function.arguments, schemas.get(tc.function.name));
           }
+        }
+        // Opt-in schema verdict on what the repair could not fix. This surface
+        // is where the silent failure was worst: parseToolInput turns
+        // unparseable arguments into `input: {}`, so the client sees a tool_use
+        // block with nothing in it and no indication anything went wrong.
+        if (isToolArgumentValidationEnabled()) {
+          const invalid = invalidToolCallReasons(respToolCalls, schemas);
+          if (invalid.length > 0) throw invalidToolArgumentsError(route.displayName, invalid);
         }
       }
 
@@ -656,6 +708,8 @@ interface StreamCtx {
   pinnedModelId: string | null;
   sessionId?: string;
   pinned: boolean;
+  /** Cancel this attempt's time-budget hedge once the stream commits. */
+  disarmHedge: () => void;
 }
 
 // Consume the provider's OpenAI-style stream and re-emit it as the Anthropic
@@ -698,6 +752,9 @@ async function streamCompletion(
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Routed-Via', routedViaValue(route.platform, route.modelId));
     setFallbackHeaders(res, ctx.attempt, ctx.attemptLog);
+    // Committed: the answer is on its way, so the retry budget must no longer
+    // cancel this attempt (it could not fail over now anyway).
+    ctx.disarmHedge();
     writeSse(res, 'message_start', {
       type: 'message_start',
       message: {
@@ -820,7 +877,7 @@ async function streamCompletion(
     // committed). A rescued dialect becomes tool_use blocks; leftover clean text
     // is emitted as a text block first.
     if (heldText.length > 0) {
-      const rescue = (dialectMode === 'dialect' || containsDialectMarker(heldText))
+      const rescue = ((ctx.tools?.length ?? 0) > 0 && (dialectMode === 'dialect' || containsDialectMarker(heldText)))
         ? rescueInlineToolCalls(heldText, new Set((ctx.tools ?? []).map(t => t.function.name)))
         : { detected: false as const, calls: null, cleanText: heldText };
       if (rescue.detected && !rescue.calls) {
@@ -839,6 +896,20 @@ async function streamCompletion(
         emitText(heldText);
       }
       heldText = '';
+    }
+
+    // Opt-in schema verdict, same rule as the non-streaming surface above and
+    // as /chat/completions: this is the surface the silent failure hurt most,
+    // and Claude Code streams. Placed after the dialect rescue so a rescued
+    // call is judged too, and gated on `!messageStarted` — once message_start
+    // has gone out there is no failing over, and tearing the SSE stream down
+    // would be worse for the client than a tool_use the schema dislikes.
+    if (isToolArgumentValidationEnabled() && !messageStarted && completedCalls.length > 0) {
+      const invalid = invalidToolCallReasons(
+        completedCalls.map(c => ({ function: { name: c.name, arguments: c.arguments } })),
+        schemas,
+      );
+      if (invalid.length > 0) throw invalidToolArgumentsError(route.displayName, invalid);
     }
 
     // Nothing usable came out — fail over (message_start was never sent, so the
@@ -925,7 +996,15 @@ anthropicRouter.post('/messages/count_tokens', (req: Request, res: Response) => 
     sendError(res, 400, 'invalid_request_error', 'Invalid request');
     return;
   }
-  const { messages, tools } = convertRequest(parsed.data);
+  const converted = convertRequest(parsed.data);
+  // Same verdict as POST /messages, so a client sizing a context window learns
+  // the document is unusable here rather than getting a count for a prompt we
+  // would go on to refuse.
+  if (converted.documentRejections.length > 0) {
+    sendError(res, 400, 'invalid_request_error', documentRejectionMessage(converted.documentRejections));
+    return;
+  }
+  const { messages, tools } = converted;
   const compressionResult = compressRequest(messages, {
     header: req.headers['x-freellm-compress'],
     tools,

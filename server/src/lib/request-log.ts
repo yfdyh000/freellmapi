@@ -49,7 +49,9 @@ function setSettingIfMissing(db: LogTx, key: string, value: string): void {
 export function logRequest(
   platform: string,
   modelId: string,
-  keyId: number,
+  // NULL for rejections that never reached routing (no key was involved),
+  // e.g. an over-limit request body turned away at the parser.
+  keyId: number | null,
   status: string,
   inputTokens: number,
   outputTokens: number,

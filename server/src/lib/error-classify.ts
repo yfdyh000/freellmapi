@@ -96,7 +96,13 @@ export function isRetryableError(err: any): boolean {
     // First-byte timeout (#584): the grace budget expired before ANY byte
     // reached the client, so the next candidate can serve it invisibly.
     || msg.includes('no first byte')
-    || msg.includes('unparseable inline tool-call dialect');
+    || msg.includes('unparseable inline tool-call dialect')
+    // The model emitted a tool call whose arguments violate the schema the
+    // caller declared (opt-in check, lib/tool-validate.ts). Thrown before any
+    // byte reached the client, and a different model usually gets the same
+    // call right — the thrower marks the model skipped for this request, since
+    // a sibling key would misbehave identically.
+    || msg.includes('invalid tool arguments');
 }
 
 // A genuine provider QUOTA signal: a structured 429 or rate-limit/quota wording.
@@ -169,6 +175,28 @@ export function isClientAbortError(err: any): boolean {
   return msg.includes('client disconnected');
 }
 
+// ── Fallback time-budget hedging (fallback-v2) ──────────────────────────────
+// When the wall-clock retry budget expires MID-FLIGHT (the current attempt is
+// still waiting on a stalled upstream), the fallback loop aborts the composed
+// fetch signal with this marked error. Same rationale as the client abort: it
+// is NOT a provider-health signal, so it must never bench/cooldown/penalize
+// the model+key, and enrichAbort must pass it through untouched. The loop
+// catches it, renders timedOut exhaustion (the budget is spent — nothing left
+// to try), and stops without failure bookkeeping.
+export function newHedgeAbortError(): Error {
+  const err = new Error('fallback time budget expired — upstream request canceled');
+  (err as Error & { hedgeAbort?: boolean }).hedgeAbort = true;
+  return err;
+}
+
+/** True when an error is (or wraps) the time-budget hedge abort above. */
+export function isHedgeAbortError(err: any): boolean {
+  if (err?.hedgeAbort === true) return true;
+  if (err?.cause && (err.cause as { hedgeAbort?: boolean }).hedgeAbort === true) return true;
+  const msg = (err?.message ?? '').toLowerCase();
+  return msg.includes('fallback time budget expired');
+}
+
 /** True for any fetch-abort rejection surfacing out of a body read — the
  * per-attempt timeout ('request'-bounds deadline in fetchWithTimeout), an
  * AbortSignal.timeout, or the client disconnect above. Adapters that wrap
@@ -238,6 +266,61 @@ export function isDailyQuotaExhaustedError(err: any): boolean {
 export function isProviderDegradedError(err: any): boolean {
   const msg = (err?.message ?? '').toLowerCase();
   return msg.includes('degraded');
+}
+
+// #788: provider-level failures — 5xx, timeouts, transport/network errors, a
+// degraded deployment — are symptoms of the PROVIDER being sick, not of this
+// particular key. Retrying the same provider with a sibling key would fail
+// identically, so the fallback loop must skip the WHOLE platform for the
+// request instead of burning one failover hop per key. Key-scoped failures
+// (auth, quota, 403 tier) stay out of here so a dead key can still rotate to
+// a healthy sibling on the same platform.
+//
+// Classified on the STRUCTURED status — every adapter attaches one to an HTTP
+// failure (providerHttpError in providers/base.ts) — plus the two families that
+// carry no status at all: a timeout and a transport-level failure. Deliberately
+// NO bare '500' / '503' / 'unavailable' / 'internal server error' substrings: a
+// token count, a duration ("… took 5003ms") or a key-scoped message naming an
+// unavailable model would each condemn a healthy platform for the whole request.
+// A message check therefore only runs when there is no status to trust.
+export function isProviderLevelError(err: any): boolean {
+  // A failure the thrower explicitly scoped to the MODEL (`skipModelForRequest`
+  // — an ignored response_format, invalid tool arguments) is never provider
+  // health, and its message quotes caller- and model-supplied text: a tool
+  // named `set_timeout`, or an Ajv complaint about an instance path `/timeout`,
+  // would otherwise trip the substring checks below and condemn a healthy
+  // platform for the whole request. The structured marker is authoritative;
+  // the text is not.
+  if (err?.skipModelForRequest === true) return false;
+  const status = typeof err?.status === 'number' ? err.status : 0;
+  if (status >= 500) return true;
+  // A DEGRADED hosted deployment (NVIDIA NIM, #522) is provider health wearing
+  // a 400 — same source of truth as everywhere else, not a second substring.
+  if (isProviderDegradedError(err)) return true;
+  if (status !== 0) return false;
+  const msg = (err?.message ?? '').toLowerCase();
+  return isTimeoutErrorText(msg)
+    || msg.includes('econnrefused') || msg.includes('econnreset')
+    || msg.includes('fetch failed');   // undici transport error (DNS/TLS/proxy down)
+}
+
+// #809: kilo's free relay occasionally answers with a bare classification
+// word ("safe" / "unsafe") instead of a real reply — an upstream content
+// filter, not the requested model. Such a turn is a dead turn: treat it like
+// an empty completion so the fallback loop fails over to the next provider
+// instead of surfacing "safe"/"unsafe" as the answer.
+//
+// Scoped to the relay that actually does this. "safe"/"unsafe" is a LEGITIMATE
+// one-word answer for moderation and guard-model workloads, so applying the
+// rule everywhere would throw away correct responses and burn the whole
+// fallback chain for anyone doing classification. Only platforms observed
+// injecting a filter verdict in place of the model's reply belong here.
+const CLASSIFICATION_RELAY_PLATFORMS = new Set(['kilo']);
+
+export function isUpstreamClassificationOutput(text: unknown, platform?: string): boolean {
+  if (!platform || !CLASSIFICATION_RELAY_PLATFORMS.has(platform.toLowerCase())) return false;
+  const t = (typeof text === 'string' ? text : '').trim().toLowerCase();
+  return t === 'safe' || t === 'unsafe';
 }
 
 // Provider-side 400s are retryable because another provider may accept the same
@@ -407,7 +490,13 @@ export function modelRetirementSignal(err: any): ModelRetirementConfidence | nul
   const msg = (err?.message ?? '').toLowerCase();
   const status = typeof err?.status === 'number' ? err.status : 0;
   const gone = status === 410 || /\berror 410\b/.test(msg) || /\b410 gone\b/.test(msg);
-  if (gone || END_OF_LIFE_PHRASES.some(phrase => msg.includes(phrase))) return 'definitive';
+  // An end-of-life phrase is only definitive when the status agrees the model
+  // is not there. On its own it is just text, and 'definitive' skips the
+  // corroboration gate in noteModelRetirementSignal — so a 429 or 500 whose
+  // body happens to mention a retirement (an advisory notice, a status-page
+  // quote, a message about a DIFFERENT model) disabled a live model on one
+  // response. Unmatched here means it falls through and teaches nothing.
+  if (gone || (isModelNotFoundError(err) && END_OF_LIFE_PHRASES.some(phrase => msg.includes(phrase)))) return 'definitive';
   if (!isModelNotFoundError(err)) return null;
   return MODEL_GONE_PHRASES.some(phrase => msg.includes(phrase)) ? 'probable' : null;
 }

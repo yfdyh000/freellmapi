@@ -33,6 +33,26 @@ register(new OpenAICompatProvider({
   baseUrl: 'https://api.cerebras.ai/v1',
 }));
 
+// AnyAPI - OpenAI-compatible gateway (anyapi.ai). Free tier (checked against
+// anyapi.ai/pricing 2026-08-10): $0, no card, recurring — but the binding limit
+// is 100K TOKENS PER DAY, and only "free and basic" models are in scope. AnyAPI
+// publishes no RPM/RPD numbers at all; the 20 RPM / 200 RPD figures in #732 are
+// OpenRouter's, not AnyAPI's, so nothing here asserts a request rate.
+//
+// Model rows are NOT seeded here or in migrations — they are authored in the
+// hosted catalog and arrive via catalog-sync once the platform is registered
+// (see services/catalog-sync.ts, which gates on hasProvider). The ids proposed
+// in #732 (meta-llama/llama-3.3-70b-instruct:free, qwen/qwen3-coder:free,
+// nvidia/nemotron-3-ultra-550b-a55b:free, google/gemma-4-26b-a4b-it:free) came
+// from a third-party list and are UNVERIFIED against the live /v1/models, which
+// needs a key; treat them as candidates for catalog authoring, where a bad id
+// is caught by the health check instead of shipped as a default.
+register(new OpenAICompatProvider({
+  platform: 'anyapi',
+  name: 'AnyAPI',
+  baseUrl: 'https://api.anyapi.ai/v1',
+}));
+
 // SambaNova was dropped in V23 (June 2026): the free tier is permanently gone.
 // The always-free tier was retired in early 2025 for a one-time $5 trial
 // credit (expires in 3 months); once it lapses, every chat call 402s

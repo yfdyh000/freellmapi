@@ -159,6 +159,8 @@
     "notGitInstall": "এই ইনস্টলেশনে কমিটের তথ্য নেই।",
     "checkFailed": "আপডেট পরীক্ষা করা যায়নি।",
     "contactsGithub": "পরীক্ষাগুলি ম্যানুয়ালি করা হয় এবং GitHub-এর সঙ্গে যোগাযোগ করে।",
+    "autoUpdateCheck": "স্বয়ংক্রিয় আপডেট পরীক্ষা",
+    "autoUpdateCheckHelp": "দিনে একবার নতুন রিলিজের জন্য GitHub পরীক্ষা করে এবং একটি অনুস্মারক দেখায়। ডিফল্টভাবে বন্ধ।",
     "openReleases": "GitHub রিলিজ খুলুন",
     "restartAfterUpdate": "বিল্ড সম্পূর্ণ হওয়ার পর FreeLLMAPI পুনরায় চালু করুন।"
   },
@@ -317,6 +319,8 @@
     "tabProviders": "প্রদানকারী",
     "checklistSummary": "{total}টি প্রদানকারীর মধ্যে {configured}টি কনফিগার করা হয়েছে",
     "checklistKeyless": "কোনো কী প্রয়োজন নেই",
+    "checklistNoKeyTip": "এখনও কোনো কী যোগ করা হয়নি। যোগ করতে ক্লিক করুন।",
+    "checklistKeylessTip": "কী ছাড়াই কাজ করে।",
     "tabQuotaSignals": "কোটা সংকেত",
     "tabApiKey": "ইউনিফাইড API কী",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "প্রোফাইল তৈরি করুন",
     "cpRotate": "কী পরিবর্তন করুন",
     "cpKeyOnce": "এই কী এখনই কপি করুন — এটি আর দেখানো হবে না।",
-    "cpEnabledAria": "প্রোফাইল সক্রিয়"
+    "cpEnabledAria": "প্রোফাইল সক্রিয়",
+    "selectKey": "এই কী নির্বাচন করুন",
+    "bulkSelected": "{count} নির্বাচিত",
+    "bulkEnable": "সব সক্ষম করুন",
+    "bulkDisable": "সব নিষ্ক্রিয় করুন",
+    "bulkDelete": "সব মুছে দিন",
+    "bulkDeleteConfirm": "{count}টি মুছবেন?",
+    "bulkResult": "{done}টি হালনাগাদ হয়েছে; {failed}টি ব্যর্থ।",
+    "bulkDeleteResult": "{done}টি মুছে ফেলা হয়েছে; {failed}টি ব্যর্থ।"
   },
   "status": {
     "healthy": "সুস্থ",
@@ -841,5 +853,14 @@
     "manualHint": "টুলের নিজস্ব সেটিংসে দেওয়ার জন্য বেস URL এবং কী।",
     "endpoint": "এন্ডপয়েন্ট",
     "documentation": "ডকুমেন্টেশন"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

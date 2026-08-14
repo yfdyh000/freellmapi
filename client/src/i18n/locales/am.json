@@ -159,6 +159,8 @@
     "notGitInstall": "ይህ ጭነት የcommit መረጃን አያካትትም።",
     "checkFailed": "ዝማኔዎችን መፈተሽ አልተቻለም።",
     "contactsGithub": "ፍተሻዎች በእጅ የሚከናወኑ ሲሆን GitHubን ያገናኛሉ።",
+    "autoUpdateCheck": "ራስ-ሰር የዝማኔ ፍተሻ",
+    "autoUpdateCheckHelp": "በቀን አንድ ጊዜ ለአዲስ ልቀት GitHubን ይፈትሻል እና ማስታወሻ ያሳያል። በነባሪነት ጠፍቷል።",
     "openReleases": "የGitHub ልቀቶችን ክፈት",
     "restartAfterUpdate": "ግንባታው ከተጠናቀቀ በኋላ FreeLLMAPIን እንደገና ያስጀምሩ።"
   },
@@ -317,6 +319,8 @@
     "tabProviders": "አቅራቢዎች",
     "checklistSummary": "ከ{total} አቅራቢዎች {configured} ተዋቅረዋል",
     "checklistKeyless": "ቁልፍ አያስፈልግም",
+    "checklistNoKeyTip": "እስካሁን ቁልፍ አልታከለም። ለመጨመር ጠቅ ያድርጉ።",
+    "checklistKeylessTip": "ያለ ቁልፍ ይሠራል።",
     "tabQuotaSignals": "የኮታ ምልክቶች",
     "tabApiKey": "የተዋሃደ API ቁልፍ",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "መገለጫ ፍጠር",
     "cpRotate": "ቁልፍ ቀይር",
     "cpKeyOnce": "ይህን ቁልፍ አሁን ቅዱ — ዳግም አይታይም።",
-    "cpEnabledAria": "መገለጫ ነቅቷል"
+    "cpEnabledAria": "መገለጫ ነቅቷል",
+    "selectKey": "ይህን ቁልፍ ይምረጡ",
+    "bulkSelected": "{count} ተመርጧል",
+    "bulkEnable": "ሁሉንም አንቃ",
+    "bulkDisable": "ሁሉንም አሰናክል",
+    "bulkDelete": "ሁሉንም ሰርዝ",
+    "bulkDeleteConfirm": "{count} ይሰረዙ?",
+    "bulkResult": "{done} ተዘምኗል፤ {failed} አልተሳካም።",
+    "bulkDeleteResult": "{done} ተሰርዟል፤ {failed} አልተሳካም።"
   },
   "status": {
     "healthy": "ጤናማ",
@@ -841,5 +853,14 @@
     "manualHint": "በመሣሪያው ራሱ ቅንብሮች ውስጥ የሚገባ የመሠረት URL እና ቁልፍ።",
     "endpoint": "የመዳረሻ ነጥብ",
     "documentation": "ሰነዶች"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

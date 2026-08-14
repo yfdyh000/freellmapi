@@ -1,6 +1,20 @@
 import http from 'http';
 import https from 'https';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { assertProviderUrlAllowed } from './url-guard.js';
+
+// #590 (per-key proxy): the SAME provider may be reached through different
+// exit IPs per key (geo-ban / risk-control avoidance). Providers are process
+// singletons, so the per-key override cannot live on the provider instance —
+// it rides request-scoped AsyncLocalStorage instead, set by the dispatcher
+// around a provider call and read here in proxyFetch.
+const perKeyProxyStore = new AsyncLocalStorage<string>();
+
+/** Run `fn` with a per-key proxy override in effect; empty URL = global proxy. */
+export function withKeyProxy<T>(proxyUrl: string | undefined, fn: () => T): T {
+  return perKeyProxyStore.run(proxyUrl ?? '', fn);
+}
+
 
 // undici (ProxyAgent) and socks-proxy-agent are lazy-loaded on first proxy use
 // ONLY. Importing undici at module top-level eagerly runs its web/cache init,
@@ -127,6 +141,37 @@ let cached: {
   ts: number;
 } | null = null;
 const CACHE_TTL_MS = 30_000;
+
+// #590: per-key proxy dispatchers, keyed by the key's proxy URL. Independent
+// of the global cache so a per-key override never poisons the global one.
+//
+// A working dispatcher is cached for as long as it stays in the map: the cache
+// key IS the whole proxy URL, so unlike the global entry (whose URL can change
+// under it) it can never go stale — re-building it on a timer would only churn
+// connection pools. A FAILED build is cached briefly instead, so a proxy that
+// was down doesn't stay written off forever.
+//
+// The map is bounded: entries are per distinct proxy URL, so at human scale
+// this holds a handful, but nothing stops an operator from pointing a hundred
+// keys at a hundred rotating exits. Oldest-first eviction keeps a bad day from
+// turning into an unbounded pile of agents. An evicted (or expired) dispatcher
+// is dropped, not closed — closing it would tear down requests still streaming
+// through it; the GC collects it once they finish. Same as the global cache.
+const perKeyCached = new Map<string, { dispatcher: unknown | undefined; isSocks: boolean; ts: number }>();
+const PER_KEY_FAILURE_TTL_MS = 30_000;
+const PER_KEY_CACHE_MAX = 32;
+
+function rememberPerKeyDispatcher(proxyUrl: string, entry: { dispatcher: unknown | undefined; isSocks: boolean; ts: number }): void {
+  // Delete-then-set so re-use moves an entry to the young end of the map and
+  // eviction takes the genuinely least-recently-used URL.
+  perKeyCached.delete(proxyUrl);
+  perKeyCached.set(proxyUrl, entry);
+  while (perKeyCached.size > PER_KEY_CACHE_MAX) {
+    const oldest = perKeyCached.keys().next().value;
+    if (oldest === undefined) break;
+    perKeyCached.delete(oldest);
+  }
+}
 
 /** Called once at startup (after initDb) and on PUT /api/settings/proxy. */
 export function applyProxyUrl(dbValue: string): void {
@@ -502,6 +547,28 @@ async function dispatchFetch(
   requestType: ProxyRequestType,
   timeoutMs: number | undefined,
 ): Promise<Response> {
+  // #590: a per-key proxy override (set via withKeyProxy around the provider
+  // call) takes precedence over the global proxy for THIS request. Empty
+  // string (the store default) means "fall back to global".
+  const perKeyUrl = perKeyProxyStore.getStore() ?? '';
+  if (perKeyUrl) {
+    // Every bypass still applies, unchanged: the global on/off switch, the
+    // per-platform bypass list, and NO_PROXY. A per-key override says WHICH
+    // proxy to use, not that this request must be proxied — an operator who
+    // turned proxying off, or listed the upstream in NO_PROXY, still gets a
+    // direct connection.
+    if (!shouldBypassProxy(url, platform)) {
+      const resolved = await resolvePerKeyDispatcher(perKeyUrl);
+      if (resolved) {
+        if (resolved.isSocks) {
+          return socksFetch(url, init, resolved.dispatcher as http.Agent, platform, requestType, timeoutMs);
+        }
+        return fetch(url, { ...init, dispatcher: resolved.dispatcher } as unknown as RequestInit);
+      }
+    }
+    // Per-key proxy failed to build → fall through to the global/direct path.
+  }
+
   // Bypass check: disabled globally, this platform is exempt, or the upstream
   // host is listed in NO_PROXY.
   if (shouldBypassProxy(url, platform)) {
@@ -522,6 +589,37 @@ async function dispatchFetch(
 
   // HTTP/HTTPS proxy → undici (dispatcher is an undici extension not in TS types)
   return fetch(url, { ...init, dispatcher: resolved.dispatcher } as unknown as RequestInit);
+}
+
+/** Build (and TTL-cache) a dispatcher for a per-key proxy URL. Returns
+ *  undefined when the URL is empty or the agent fails to build. */
+async function resolvePerKeyDispatcher(proxyUrl: string): Promise<{ dispatcher: unknown; isSocks: boolean } | undefined> {
+  const now = Date.now();
+  const hit = perKeyCached.get(proxyUrl);
+  if (hit?.dispatcher) {
+    rememberPerKeyDispatcher(proxyUrl, hit);
+    return { dispatcher: hit.dispatcher, isSocks: hit.isSocks };
+  }
+  // Negative entry, still inside its cool-off: don't retry the build yet.
+  if (hit && now - hit.ts < PER_KEY_FAILURE_TTL_MS) return undefined;
+
+  try {
+    const isSocks = isSocksProxyUrl(proxyUrl);
+    if (isSocks) {
+      const SocksAgent = await loadSocksAgent();
+      const dispatcher = new SocksAgent(proxyUrl);
+      rememberPerKeyDispatcher(proxyUrl, { dispatcher, isSocks: true, ts: now });
+      return { dispatcher, isSocks: true };
+    }
+    const ProxyAgentCtor = await loadHttpProxyAgent();
+    const dispatcher = new ProxyAgentCtor({ uri: proxyUrl });
+    rememberPerKeyDispatcher(proxyUrl, { dispatcher, isSocks: false, ts: now });
+    return { dispatcher, isSocks: false };
+  } catch (err: any) {
+    console.error(`[proxy] Failed to create per-key dispatcher for "${redactProxyUrl(proxyUrl)}": ${err.message}`);
+    rememberPerKeyDispatcher(proxyUrl, { dispatcher: undefined, isSocks: false, ts: now });
+    return undefined;
+  }
 }
 
 /**

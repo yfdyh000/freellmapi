@@ -159,6 +159,8 @@
     "notGitInstall": "இந்த நிறுவலில் commit தகவல் இல்லை.",
     "checkFailed": "புதுப்பிப்புகளைச் சரிபார்க்க முடியவில்லை.",
     "contactsGithub": "சரிபார்ப்புகள் கைமுறையாகச் செய்யப்படுகின்றன மற்றும் GitHub-ஐத் தொடர்புகொள்கின்றன.",
+    "autoUpdateCheck": "தானியங்கு புதுப்பிப்புச் சரிபார்ப்பு",
+    "autoUpdateCheckHelp": "நாளொன்றுக்கு ஒருமுறை புதிய வெளியீட்டிற்காக GitHub-ஐச் சரிபார்த்து நினைவூட்டலைக் காட்டும். இயல்பாக அணைக்கப்பட்டுள்ளது.",
     "openReleases": "GitHub வெளியீடுகளைத் திற",
     "restartAfterUpdate": "உருவாக்கம் முடிந்ததும் FreeLLMAPI-ஐ மறுதொடக்கம் செய்யவும்."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "வழங்குபவர்கள்",
     "checklistSummary": "{total} இல் {configured} வழங்குபவர்கள் உள்ளமைக்கப்பட்டுள்ளனர்",
     "checklistKeyless": "விசை தேவையில்லை",
+    "checklistNoKeyTip": "இன்னும் விசை எதுவும் சேர்க்கப்படவில்லை. சேர்க்க கிளிக் செய்யவும்.",
+    "checklistKeylessTip": "விசை இல்லாமல் செயல்படும்.",
     "tabQuotaSignals": "ஒதுக்கீடு சமிக்ஞைகள்",
     "tabApiKey": "ஒருங்கிணைந்த API விசை",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "சுயவிவரத்தை உருவாக்கு",
     "cpRotate": "சாவியை மாற்று",
     "cpKeyOnce": "இந்தச் சாவியை இப்போதே நகலெடுக்கவும் — இது மீண்டும் காட்டப்படாது.",
-    "cpEnabledAria": "சுயவிவரம் இயக்கத்தில்"
+    "cpEnabledAria": "சுயவிவரம் இயக்கத்தில்",
+    "selectKey": "இந்த விசையைத் தேர்ந்தெடு",
+    "bulkSelected": "{count} தேர்ந்தெடுக்கப்பட்டது",
+    "bulkEnable": "அனைத்தையும் இயக்கு",
+    "bulkDisable": "அனைத்தையும் முடக்கு",
+    "bulkDelete": "அனைத்தையும் நீக்கு",
+    "bulkDeleteConfirm": "{count} நீக்கவா?",
+    "bulkResult": "{done} புதுப்பிக்கப்பட்டது; {failed} தோல்வி.",
+    "bulkDeleteResult": "{done} நீக்கப்பட்டது; {failed} தோல்வி."
   },
   "status": {
     "healthy": "ஆரோக்கியமான",
@@ -841,5 +853,14 @@
     "manualHint": "கருவியின் சொந்த அமைப்புகளில் உள்ளிட வேண்டிய அடிப்படை URL மற்றும் விசை.",
     "endpoint": "எண்ட்பாயிண்ட்",
     "documentation": "ஆவணங்கள்"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

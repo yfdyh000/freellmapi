@@ -11,7 +11,8 @@ import { mintDashboardToken } from '../helpers/auth.js';
 // either failed over (before headers) or surfaced honestly (after).
 
 async function request(app: Express, path: string, body: any, extraHeaders: Record<string, string> = {}) {
-  const server = app.listen(0);
+  const server = app.listen(0, '127.0.0.1');
+  if (!server.listening) await new Promise<void>(resolve => server.once('listening', () => resolve()));
   const addr = server.address() as any;
   const res = await fetch(`http://127.0.0.1:${addr.port}${path}`, {
     method: 'POST',
@@ -49,7 +50,7 @@ const TOOLS = [{ type: 'function', function: { name: 'Read', description: 'read 
 function mockUpstream(script: Array<{ body: string; status?: number }>) {
   const origFetch = global.fetch;
   let call = 0;
-  const seen: Array<{ model: string }> = [];
+  const seen: Array<{ model: string; streamOptions?: { include_usage?: boolean } }> = [];
   vi.spyOn(global, 'fetch').mockImplementation(async (url, init) => {
     const urlStr = typeof url === 'string' ? url : url.toString();
     // Only intercept provider upstreams; the test's own localhost request
@@ -58,7 +59,7 @@ function mockUpstream(script: Array<{ body: string; status?: number }>) {
       return origFetch(url as any, init);
     }
     const reqBody = JSON.parse(String((init as RequestInit).body));
-    seen.push({ model: reqBody.model });
+    seen.push({ model: reqBody.model, streamOptions: reqBody.stream_options });
     const step = script[Math.min(call++, script.length - 1)];
     return new Response(step.body, {
       status: step.status ?? 200,
@@ -268,6 +269,39 @@ describe('proxy stream turn-integrity', () => {
     expect(r.text.trim().endsWith('data: [DONE]')).toBe(true);
   });
 
+  it('forwards stream_options.include_usage and records upstream token usage', async () => {
+    const usage = { prompt_tokens: 3263, completion_tokens: 15, total_tokens: 3278 };
+    const up = mockUpstream([{
+      body: sse(
+        roleChunk,
+        textChunk('Hello'),
+        finishChunk('stop'),
+        { id: 'c1', object: 'chat.completion.chunk', created: 1, model: 'm', choices: [], usage },
+        '[DONE]',
+      ),
+    }]);
+
+    const r = await request(app, '/v1/chat/completions', {
+      stream: true,
+      stream_options: { include_usage: true },
+      messages: [{ role: 'user', content: 'real streaming usage test' }],
+    });
+
+    expect(r.status).toBe(200);
+    expect(up.seen[0].streamOptions).toEqual({ include_usage: true });
+    expect(frames(r.text).find(f => f.usage)?.usage).toEqual(usage);
+
+    const row = getDb().prepare(
+      "SELECT input_tokens, output_tokens FROM requests WHERE status = 'success' ORDER BY id DESC LIMIT 1",
+    ).get() as { input_tokens: number; output_tokens: number };
+    expect(row).toEqual({ input_tokens: 3263, output_tokens: 15 });
+
+    const ledger = getDb().prepare(
+      "SELECT COALESCE(SUM(tokens), 0) AS total FROM rate_limit_usage WHERE kind = 'tokens'",
+    ).get() as { total: number };
+    expect(ledger.total).toBe(3278);
+  });
+
   it('rescues a non-streaming inline dialect answer into structured tool_calls', async () => {
     const origFetch = global.fetch;
     vi.spyOn(global, 'fetch').mockImplementation(async (url, init) => {
@@ -289,6 +323,44 @@ describe('proxy stream turn-integrity', () => {
     expect(msg.tool_calls[0].id).toBe('call_rescued_1');
     expect(msg.content).toBeNull();
     expect(r.body.choices[0].finish_reason).toBe('tool_calls');
+  });
+
+  it('records ttfb on the first reasoning_content token, not the first visible text (#764)', async () => {
+    // Reasoning models stream thinking (reasoning_content) long before the
+    // first answer token. The regression: ttfb was recorded at header flush,
+    // i.e. the END of the thinking phase, so the Analytics speed shown was the
+    // reasoning tail — or NULL on turns that never flushed. It must count the
+    // first token of ANY kind. We interleave a real delay between the
+    // reasoning frame and the first text frame to make the two moments
+    // measurable.
+    const origFetch = global.fetch;
+    const enc = new TextEncoder();
+    vi.spyOn(global, 'fetch').mockImplementation(async (url, init) => {
+      const urlStr = typeof url === 'string' ? url : url.toString();
+      if (!urlStr.includes('api.groq.com')) return origFetch(url as any, init);
+      const stream = new ReadableStream({
+        async start(controller) {
+          controller.enqueue(enc.encode(sse(
+            roleChunk,
+            { id: 'c1', object: 'chat.completion.chunk', created: 1, model: 'm', choices: [{ index: 0, delta: { reasoning_content: 'thinking hard…', content: null }, finish_reason: null }] },
+          )));
+          await new Promise(r => setTimeout(r, 400));
+          controller.enqueue(enc.encode(sse(textChunk('Hello world'), finishChunk('stop'), '[DONE]')));
+          controller.close();
+        },
+      });
+      return new Response(stream, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+    });
+    const r = await request(app, '/v1/chat/completions', {
+      stream: true, messages: [{ role: 'user', content: 'ttfb reasoning test' }],
+    });
+    expect(r.status).toBe(200);
+    const rows = getDb().prepare("SELECT status, latency_ms, ttfb_ms FROM requests ORDER BY id").all() as any[];
+    expect(rows[0].status).toBe('success');
+    expect(rows[0].ttfb_ms).not.toBeNull();
+    // ttfb must be the reasoning-head moment (well before the text token that
+    // triggers header flush), not the flush time ≈ latency.
+    expect(rows[0].ttfb_ms).toBeLessThan(rows[0].latency_ms - 250);
   });
 });
 

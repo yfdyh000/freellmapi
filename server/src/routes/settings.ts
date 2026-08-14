@@ -7,6 +7,7 @@ import { isUnifyEnabled, setUnifyEnabled, getUnifyOverrides, setUnifyOverrides, 
 import { getClaudeModelMap, setClaudeModelMap } from '../services/anthropic-map.js';
 import { getGeminiModelMap, setGeminiModelMap } from '../services/gemini-map.js';
 import { getOllamaEmulationMode } from './ollama.js';
+import { UPDATE_CHECK_SETTING, isAutoUpdateCheckEnabled } from './update.js';
 import { listUrlTokens, mintUrlToken, revokeUrlToken } from '../services/url-tokens.js';
 import {
   getRequestMaxTokensBudget,
@@ -21,6 +22,11 @@ import {
 } from '../services/compression/config.js';
 import { z } from 'zod';
 import { getAppVersion } from '../lib/app-version.js';
+import {
+  UNIFIED_MAX_TOKENS_SETTING,
+  UNIFIED_MAX_TOKENS_AUTO,
+  unifiedMaxTokensCap,
+} from '../lib/sampling-params.js';
 
 export const settingsRouter = Router();
 
@@ -31,6 +37,31 @@ export const settingsRouter = Router();
 // dashboard then shows nothing rather than a number that isn't the release.
 settingsRouter.get('/version', (_req: Request, res: Response) => {
   res.json({ version: getAppVersion() });
+});
+
+// Opt-in for the dashboard's automatic release reminder (#782). Off unless the
+// operator turns it on: a self-hosted install must not contact GitHub on page
+// load on behalf of someone who never asked it to. The manual checker in
+// Settings is a separate surface and is unaffected by this flag.
+const updateCheckSchema = z.object({ enabled: z.boolean() }).strict();
+
+settingsRouter.get('/update-check', (_req: Request, res: Response) => {
+  res.json({ enabled: isAutoUpdateCheckEnabled() });
+});
+
+settingsRouter.put('/update-check', (req: Request, res: Response) => {
+  const parsed = updateCheckSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: {
+        message: `Invalid update check setting: ${parsed.error.errors.map(error => error.message).join(', ')}`,
+        type: 'invalid_request_error',
+      },
+    });
+    return;
+  }
+  setSetting(UPDATE_CHECK_SETTING, parsed.data.enabled ? '1' : '0');
+  res.json({ enabled: isAutoUpdateCheckEnabled() });
 });
 
 settingsRouter.get('/compression', (_req: Request, res: Response) => {
@@ -188,6 +219,49 @@ settingsRouter.delete('/url-tokens/:id', (req: Request, res: Response) => {
     return;
   }
   res.status(204).end();
+});
+
+// The unified output-token cap as the dashboard sees it. `mode` is exactly
+// what PUT accepts back — 'off', 'auto', or the integer itself, never a
+// stringified number — so a read/modify/write round trip can't 400 on its own
+// output. A stored value that unifiedMaxTokensCap() doesn't understand is
+// reported as 'off', which is how it actually behaves (effectiveCap null).
+function outputLimitState(): { mode: 'off' | 'auto' | number; effectiveCap: number | null; autoValue: number } {
+  const raw = (getSetting(UNIFIED_MAX_TOKENS_SETTING) ?? '').trim().toLowerCase();
+  const effectiveCap = unifiedMaxTokensCap();
+  const mode = raw === 'auto' ? 'auto' as const : (effectiveCap ?? 'off' as const);
+  return { mode, effectiveCap, autoValue: UNIFIED_MAX_TOKENS_AUTO };
+}
+
+// Get the unified output-token cap ('off' = disabled, 'auto' = 32768, or an
+// explicit integer). See lib/sampling-params.ts unifiedMaxTokensCap().
+settingsRouter.get('/output-limit', (_req: Request, res: Response) => {
+  res.json(outputLimitState());
+});
+
+const outputLimitPutSchema = z.object({
+  mode: z.union([
+    z.literal('off'),
+    z.literal('auto'),
+    z.number().int().min(1),
+  ]),
+});
+
+// Update the unified output-token cap. 'off' restores pass-through behaviour;
+// 'auto' clamps every request's max_tokens to UNIFIED_MAX_TOKENS_AUTO; an
+// integer clamps to that value. Takes effect on the next request.
+settingsRouter.put('/output-limit', (req: Request, res: Response) => {
+  const parsed = outputLimitPutSchema.safeParse(req.body);
+  if (!parsed.success) {
+    const detail = parsed.error.errors
+      .map(e => (e.path.length ? `${e.path.join('.')}: ${e.message}` : e.message))
+      .slice(0, 5)
+      .join(', ');
+    res.status(400).json({ error: { message: `Invalid output limit: ${detail}`, type: 'invalid_request_error' } });
+    return;
+  }
+  setSetting(UNIFIED_MAX_TOKENS_SETTING, String(parsed.data.mode));
+  res.json(outputLimitState());
 });
 
 // Get the request guardrails (per-request token budget + failover circuit

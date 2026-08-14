@@ -159,6 +159,8 @@
     "notGitInstall": "Denne installation indeholder ikke commit-oplysninger.",
     "checkFailed": "Det var ikke muligt at søge efter opdateringer.",
     "contactsGithub": "Tjek udføres manuelt og kontakter GitHub.",
+    "autoUpdateCheck": "Automatisk opdateringstjek",
+    "autoUpdateCheckHelp": "Tjekker GitHub én gang om dagen for en ny udgivelse og viser en påmindelse. Slået fra som standard.",
     "openReleases": "Åbn GitHub-udgivelser",
     "restartAfterUpdate": "Genstart FreeLLMAPI, når buildet er færdigt."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Udbydere",
     "checklistSummary": "{configured} af {total} udbydere er konfigureret",
     "checklistKeyless": "ingen nøgle påkrævet",
+    "checklistNoKeyTip": "Der er endnu ikke tilføjet en nøgle. Klik for at tilføje en.",
+    "checklistKeylessTip": "Virker uden nøgle.",
     "tabQuotaSignals": "Kvotesignaler",
     "tabApiKey": "Unified API nøgle",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Opret profil",
     "cpRotate": "Rotér nøgle",
     "cpKeyOnce": "Kopiér denne nøgle nu — den vises ikke igen.",
-    "cpEnabledAria": "Profil aktiveret"
+    "cpEnabledAria": "Profil aktiveret",
+    "selectKey": "Vælg denne nøgle",
+    "bulkSelected": "{count} valgt",
+    "bulkEnable": "Aktivér alle",
+    "bulkDisable": "Deaktivér alle",
+    "bulkDelete": "Slet alle",
+    "bulkDeleteConfirm": "Slet {count}?",
+    "bulkResult": "Opdaterede {done}; fejlede {failed}.",
+    "bulkDeleteResult": "Slettede {done}; fejlede {failed}."
   },
   "status": {
     "healthy": "sundt",
@@ -841,5 +853,14 @@
     "manualHint": "Basis-URL og nøgle til værktøjets egne indstillinger.",
     "endpoint": "Endpoint",
     "documentation": "Dokumentation"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

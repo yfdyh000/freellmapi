@@ -159,6 +159,8 @@
     "notGitInstall": "การติดตั้งนี้ไม่มีข้อมูล commit",
     "checkFailed": "ไม่สามารถตรวจสอบการอัปเดตได้",
     "contactsGithub": "การตรวจสอบเป็นแบบดำเนินการเองและมีการติดต่อ GitHub",
+    "autoUpdateCheck": "ตรวจสอบการอัปเดตอัตโนมัติ",
+    "autoUpdateCheckHelp": "ตรวจสอบ GitHub วันละครั้งว่ามีเวอร์ชันใหม่หรือไม่ และแสดงการแจ้งเตือน ปิดไว้ตามค่าเริ่มต้น",
     "openReleases": "เปิด GitHub Releases",
     "restartAfterUpdate": "รีสตาร์ต FreeLLMAPI หลังจากบิลด์เสร็จสิ้น"
   },
@@ -317,6 +319,8 @@
     "tabProviders": "ผู้ให้บริการ",
     "checklistSummary": "กำหนดค่าผู้ให้บริการแล้ว {configured} จาก {total} ราย",
     "checklistKeyless": "ไม่ต้องใช้คีย์",
+    "checklistNoKeyTip": "ยังไม่ได้เพิ่มคีย์ คลิกเพื่อเพิ่ม",
+    "checklistKeylessTip": "ใช้งานได้โดยไม่ต้องใช้คีย์",
     "tabQuotaSignals": "สัญญาณโควต้า",
     "tabApiKey": "คีย์ API แบบรวม",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "สร้างโปรไฟล์",
     "cpRotate": "หมุนเวียนคีย์",
     "cpKeyOnce": "คัดลอกคีย์นี้ตอนนี้ — จะไม่แสดงอีก",
-    "cpEnabledAria": "เปิดใช้งานโปรไฟล์"
+    "cpEnabledAria": "เปิดใช้งานโปรไฟล์",
+    "selectKey": "เลือกคีย์นี้",
+    "bulkSelected": "เลือก {count} แล้ว",
+    "bulkEnable": "เปิดใช้งานทั้งหมด",
+    "bulkDisable": "ปิดใช้งานทั้งหมด",
+    "bulkDelete": "ลบทั้งหมด",
+    "bulkDeleteConfirm": "ลบ {count} รายการ?",
+    "bulkResult": "อัปเดต {done}; ล้มเหลว {failed}",
+    "bulkDeleteResult": "ลบ {done}; ล้มเหลว {failed}"
   },
   "status": {
     "healthy": "มีสุขภาพดี",
@@ -841,5 +853,14 @@
     "manualHint": "Base URL และคีย์สำหรับกรอกในการตั้งค่าของเครื่องมือเอง",
     "endpoint": "เอนด์พอยต์",
     "documentation": "เอกสารประกอบ"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

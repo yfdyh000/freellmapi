@@ -159,6 +159,8 @@
     "notGitInstall": "Deze installatie bevat geen commitinformatie.",
     "checkFailed": "Kan niet controleren op updates.",
     "contactsGithub": "Controles worden handmatig uitgevoerd en maken contact met GitHub.",
+    "autoUpdateCheck": "Automatische updatecontrole",
+    "autoUpdateCheckHelp": "Controleert GitHub eenmaal per dag op een nieuwe release en toont een herinnering. Standaard uitgeschakeld.",
     "openReleases": "GitHub Releases openen",
     "restartAfterUpdate": "Start FreeLLMAPI opnieuw nadat de build is voltooid."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Aanbieders",
     "checklistSummary": "{configured} van {total} aanbieders ingesteld",
     "checklistKeyless": "geen sleutel nodig",
+    "checklistNoKeyTip": "Nog geen sleutel toegevoegd. Klik om er een toe te voegen.",
+    "checklistKeylessTip": "Werkt zonder sleutel.",
     "tabQuotaSignals": "Quotasignalen",
     "tabApiKey": "Unified API sleutel",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Profiel aanmaken",
     "cpRotate": "Sleutel rouleren",
     "cpKeyOnce": "Kopieer deze sleutel nu — hij wordt niet opnieuw getoond.",
-    "cpEnabledAria": "Profiel ingeschakeld"
+    "cpEnabledAria": "Profiel ingeschakeld",
+    "selectKey": "Selecteer deze sleutel",
+    "bulkSelected": "{count} geselecteerd",
+    "bulkEnable": "Alles inschakelen",
+    "bulkDisable": "Alles uitschakelen",
+    "bulkDelete": "Alles verwijderen",
+    "bulkDeleteConfirm": "{count} verwijderen?",
+    "bulkResult": "Bijgewerkt {done}; mislukt {failed}.",
+    "bulkDeleteResult": "Verwijderd {done}; mislukt {failed}."
   },
   "status": {
     "healthy": "Gezond",
@@ -841,5 +853,14 @@
     "manualHint": "Basis-URL en sleutel om in de eigen instellingen van de tool in te vullen.",
     "endpoint": "Endpoint",
     "documentation": "Documentatie"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -159,6 +159,8 @@
     "notGitInstall": "اس انسٹالیشن میں commit کی معلومات شامل نہیں ہیں۔",
     "checkFailed": "اپ ڈیٹس کی جانچ نہیں ہو سکی۔",
     "contactsGithub": "جانچ دستی طور پر کی جاتی ہے اور GitHub سے رابطہ کرتی ہے۔",
+    "autoUpdateCheck": "خودکار اپ ڈیٹ جانچ",
+    "autoUpdateCheckHelp": "دن میں ایک بار نئی ریلیز کے لیے GitHub کی جانچ کرتا ہے اور یاد دہانی دکھاتا ہے۔ بطور ڈیفالٹ بند ہے۔",
     "openReleases": "GitHub ریلیزز کھولیں",
     "restartAfterUpdate": "بلڈ مکمل ہونے کے بعد FreeLLMAPI کو دوبارہ شروع کریں۔"
   },
@@ -317,6 +319,8 @@
     "tabProviders": "فراہم کرنے والے",
     "checklistSummary": "{total} میں سے {configured} فراہم کنندگان ترتیب دیے گئے",
     "checklistKeyless": "کلید کی ضرورت نہیں",
+    "checklistNoKeyTip": "ابھی تک کوئی کلید شامل نہیں کی گئی۔ شامل کرنے کے لیے کلک کریں۔",
+    "checklistKeylessTip": "کلید کے بغیر کام کرتا ہے۔",
     "tabQuotaSignals": "کوٹہ سگنلز",
     "tabApiKey": "متحد API کلید",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "پروفائل بنائیں",
     "cpRotate": "کلید تبدیل کریں",
     "cpKeyOnce": "یہ کلید ابھی کاپی کریں — یہ دوبارہ نہیں دکھائی جائے گی۔",
-    "cpEnabledAria": "پروفائل فعال"
+    "cpEnabledAria": "پروفائل فعال",
+    "selectKey": "یہ کلید منتخب کریں۔",
+    "bulkSelected": "{count} منتخب",
+    "bulkEnable": "سب فعال کریں۔",
+    "bulkDisable": "سب غیر فعال کریں۔",
+    "bulkDelete": "سب حذف کریں۔",
+    "bulkDeleteConfirm": "{count} حذف کریں؟",
+    "bulkResult": "{done} اپ ڈیٹ ہوئے؛ {failed} ناکام۔",
+    "bulkDeleteResult": "{done} حذف ہوئے؛ {failed} ناکام۔"
   },
   "status": {
     "healthy": "صحت مند",
@@ -841,5 +853,14 @@
     "manualHint": "ٹول کی اپنی سیٹنگز میں درج کرنے کے لیے بیس URL اور کلید۔",
     "endpoint": "اینڈ پوائنٹ",
     "documentation": "دستاویزات"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

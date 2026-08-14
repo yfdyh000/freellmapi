@@ -160,6 +160,10 @@ interface RecentCallRow {
   clientIp: string | null
   clientUserAgent: string | null
   createdAt: string
+  // #785: custom endpoints all share the generic 'custom' platform id; the
+  // user's key label ("Ollama box") names the real provider. Null when the
+  // key was deleted or never labelled.
+  keyLabel: string | null
   // Failover-ladder length: attempts hang off the TERMINAL row of a proxied
   // request, so mid-ladder failure rows report 0.
   attemptCount: number
@@ -401,6 +405,22 @@ const gridStyle = 'var(--border)'
 const primaryFill = 'var(--foreground)'
 const tooltipStyle = { backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 } as const
 
+// The timeline endpoint buckets on the viewer's wall clock (the query sends
+// the browser's tzOffset), so its zone-less timestamps ("2026-08-10T14:00:00"
+// hourly, "2026-08-10" daily) are already local time. Parse them as local —
+// re-interpreting them as UTC here would shift every tick a second time.
+function formatTimelineTick(value: string): string {
+  if (!value) return ''
+  const iso = value.includes('T') ? value : `${value}T00:00:00`
+  const date = new Date(iso)
+  if (isNaN(date.getTime())) return value
+  return date.toLocaleString([], {
+    month: 'short',
+    day: 'numeric',
+    ...(value.includes('T') ? { hour: '2-digit', minute: '2-digit' } : {}),
+  })
+}
+
 // Two categorical series hues, validated against the app's actual chart
 // surfaces (light card #ffffff, dark card #101010) with the dataviz palette
 // checker. Slot A (blue) = the "average / input" series; slot B (aqua) = the
@@ -440,9 +460,13 @@ export default function AnalyticsPage() {
     queryFn: () => apiFetch<ByClientRow[]>(`/api/analytics/by-client?range=${range}`),
   })
 
+  // Browser's offset from UTC in minutes (480 = UTC+8), so the server buckets
+  // timeline hours/days on the viewer's wall clock instead of UTC.
+  const tzOffset = -new Date().getTimezoneOffset()
+
   const { data: timeline = [] } = useQuery({
-    queryKey: ['analytics', 'timeline', range],
-    queryFn: () => apiFetch<TimelineBucket[]>(`/api/analytics/timeline?range=${range}`),
+    queryKey: ['analytics', 'timeline', range, tzOffset],
+    queryFn: () => apiFetch<TimelineBucket[]>(`/api/analytics/timeline?range=${range}&tzOffset=${tzOffset}`),
   })
 
   const { data: byModel = [] } = useQuery({
@@ -591,7 +615,7 @@ export default function AnalyticsPage() {
                 <ResponsiveContainer width="100%" height={240}>
                   <LineChart data={timeline} margin={{ top: 6, right: 6, left: -12, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="2 4" stroke={gridStyle} />
-                    <XAxis dataKey="timestamp" tick={axisStyle} tickLine={false} axisLine={{ stroke: gridStyle }} />
+                    <XAxis dataKey="timestamp" tick={axisStyle} tickLine={false} axisLine={{ stroke: gridStyle }} tickFormatter={formatTimelineTick} />
                     <YAxis tick={axisStyle} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 12 }} iconType="line" />
@@ -612,7 +636,7 @@ export default function AnalyticsPage() {
                 <ResponsiveContainer width="100%" height={240}>
                   <LineChart data={timeline} margin={{ top: 6, right: 6, left: -12, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="2 4" stroke={gridStyle} />
-                    <XAxis dataKey="timestamp" tick={axisStyle} tickLine={false} axisLine={{ stroke: gridStyle }} />
+                    <XAxis dataKey="timestamp" tick={axisStyle} tickLine={false} axisLine={{ stroke: gridStyle }} tickFormatter={formatTimelineTick} />
                     <YAxis tick={axisStyle} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatTokens(v)} />
                     <Tooltip contentStyle={tooltipStyle} formatter={(value) => formatTokens(Number(value))} />
                     <Legend wrapperStyle={{ fontSize: 12 }} iconType="line" />
@@ -836,7 +860,9 @@ export default function AnalyticsPage() {
                             {r.modelId}
                             {r.requestedModel && r.requestedModel !== r.modelId ? ' *' : ''}
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{r.platform}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {r.platform === 'custom' && r.keyLabel ? r.keyLabel : r.platform}
+                          </TableCell>
                           <TableCell className={`text-xs ${statusTextClass(r.status)}`} title={r.error ?? undefined}>
                             {r.status}
                           </TableCell>

@@ -159,6 +159,8 @@
     "notGitInstall": "ეს ინსტალაცია კომიტების შესახებ ინფორმაციას არ შეიცავს.",
     "checkFailed": "განახლებების შემოწმება ვერ მოხერხდა.",
     "contactsGithub": "შემოწმება ხელით სრულდება და GitHub-ს უკავშირდება.",
+    "autoUpdateCheck": "განახლებების ავტომატური შემოწმება",
+    "autoUpdateCheckHelp": "დღეში ერთხელ ამოწმებს GitHub-ს ახალი გამოშვებისთვის და აჩვენებს შეხსენებას. ნაგულისხმევად გამორთულია.",
     "openReleases": "GitHub-ის რელიზების გახსნა",
     "restartAfterUpdate": "ბილდის დასრულების შემდეგ გადატვირთეთ FreeLLMAPI."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "პროვაიდერები",
     "checklistSummary": "{total}-დან {configured} პროვაიდერი კონფიგურირებულია",
     "checklistKeyless": "გასაღები არ არის საჭირო",
+    "checklistNoKeyTip": "გასაღები ჯერ არ დამატებულა. დააწკაპუნეთ დასამატებლად.",
+    "checklistKeylessTip": "მუშაობს გასაღების გარეშე.",
     "tabQuotaSignals": "კვოტის სიგნალები",
     "tabApiKey": "ერთიანი API გასაღები",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "პროფილის შექმნა",
     "cpRotate": "გასაღების შეცვლა",
     "cpKeyOnce": "დააკოპირეთ ეს გასაღები ახლავე — ის აღარ გამოჩნდება.",
-    "cpEnabledAria": "პროფილი ჩართულია"
+    "cpEnabledAria": "პროფილი ჩართულია",
+    "selectKey": "აირჩიეთ ეს გასაღები",
+    "bulkSelected": "არჩეულია {count}",
+    "bulkEnable": "ყველას ჩართვა",
+    "bulkDisable": "ყველას გამორთვა",
+    "bulkDelete": "ყველას წაშლა",
+    "bulkDeleteConfirm": "წაიშალოს {count}?",
+    "bulkResult": "განახლდა {done}; ვერ მოხერხდა {failed}.",
+    "bulkDeleteResult": "წაიშალა {done}; ვერ მოხერხდა {failed}."
   },
   "status": {
     "healthy": "ჯანსაღი",
@@ -841,5 +853,14 @@
     "manualHint": "საბაზისო URL და გასაღები ხელსაწყოს საკუთარ პარამეტრებში შესატანად.",
     "endpoint": "საბოლოო წერტილი",
     "documentation": "დოკუმენტაცია"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -159,6 +159,8 @@
     "notGitInstall": "Bản cài đặt này không có thông tin commit.",
     "checkFailed": "Không thể kiểm tra bản cập nhật.",
     "contactsGithub": "Việc kiểm tra được thực hiện thủ công và có kết nối với GitHub.",
+    "autoUpdateCheck": "Tự động kiểm tra cập nhật",
+    "autoUpdateCheckHelp": "Kiểm tra GitHub mỗi ngày một lần để tìm bản phát hành mới và hiển thị lời nhắc. Mặc định tắt.",
     "openReleases": "Mở GitHub Releases",
     "restartAfterUpdate": "Khởi động lại FreeLLMAPI sau khi hoàn tất bản dựng."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Nhà cung cấp",
     "checklistSummary": "Đã cấu hình {configured} trong {total} nhà cung cấp",
     "checklistKeyless": "không cần khóa",
+    "checklistNoKeyTip": "Chưa thêm khóa nào. Nhấp để thêm.",
+    "checklistKeylessTip": "Hoạt động mà không cần khóa.",
     "tabQuotaSignals": "tín hiệu hạn ngạch",
     "tabApiKey": "Khóa API hợp nhất",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Tạo hồ sơ",
     "cpRotate": "Xoay khóa",
     "cpKeyOnce": "Sao chép khóa này ngay — nó sẽ không được hiển thị lại.",
-    "cpEnabledAria": "Hồ sơ đang bật"
+    "cpEnabledAria": "Hồ sơ đang bật",
+    "selectKey": "Chọn khóa này",
+    "bulkSelected": "{count} đã chọn",
+    "bulkEnable": "Bật tất cả",
+    "bulkDisable": "Tắt tất cả",
+    "bulkDelete": "Xóa tất cả",
+    "bulkDeleteConfirm": "Xóa {count}?",
+    "bulkResult": "Đã cập nhật {done}; {failed} không thành công.",
+    "bulkDeleteResult": "Đã xóa {done}; {failed} không thành công."
   },
   "status": {
     "healthy": "khỏe mạnh",
@@ -841,5 +853,14 @@
     "manualHint": "URL cơ sở và khóa để nhập vào cài đặt của chính công cụ.",
     "endpoint": "Điểm cuối",
     "documentation": "Tài liệu"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -159,6 +159,8 @@
     "notGitInstall": "Тази инсталация не съдържа информация за commit.",
     "checkFailed": "Актуализациите не можаха да бъдат проверени.",
     "contactsGithub": "Проверките се стартират ръчно и се свързват с GitHub.",
+    "autoUpdateCheck": "Автоматична проверка за актуализации",
+    "autoUpdateCheckHelp": "Проверява GitHub веднъж дневно за ново издание и показва напомняне. По подразбиране е изключено.",
     "openReleases": "Отвори изданията в GitHub",
     "restartAfterUpdate": "Рестартирайте FreeLLMAPI след завършване на компилацията."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Доставчици",
     "checklistSummary": "Настроени са {configured} от {total} доставчици",
     "checklistKeyless": "не е нужен ключ",
+    "checklistNoKeyTip": "Все още не е добавен ключ. Щракнете, за да добавите.",
+    "checklistKeylessTip": "Работи без ключ.",
     "tabQuotaSignals": "Квотни сигнали",
     "tabApiKey": "Унифициран API ключ",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Създай профил",
     "cpRotate": "Смени ключа",
     "cpKeyOnce": "Копирайте този ключ сега — няма да бъде показан отново.",
-    "cpEnabledAria": "Профилът е активиран"
+    "cpEnabledAria": "Профилът е активиран",
+    "selectKey": "Изберете този ключ",
+    "bulkSelected": "{count} избрани",
+    "bulkEnable": "Включи всички",
+    "bulkDisable": "Изключи всички",
+    "bulkDelete": "Изтрий всички",
+    "bulkDeleteConfirm": "Да се изтрият ли {count}?",
+    "bulkResult": "Обновени {done}; неуспешни {failed}.",
+    "bulkDeleteResult": "Изтрити {done}; неуспешни {failed}."
   },
   "status": {
     "healthy": "здравословно",
@@ -841,5 +853,14 @@
     "manualHint": "Базов URL и ключ за въвеждане в настройките на самия инструмент.",
     "endpoint": "Крайна точка",
     "documentation": "Документация"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

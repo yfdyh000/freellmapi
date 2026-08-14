@@ -159,6 +159,8 @@
     "notGitInstall": "Instalasi ini tidak menyertakan informasi commit.",
     "checkFailed": "Tidak dapat memeriksa pembaruan.",
     "contactsGithub": "Pemeriksaan dilakukan secara manual dan menghubungi GitHub.",
+    "autoUpdateCheck": "Pemeriksaan pembaruan otomatis",
+    "autoUpdateCheckHelp": "Memeriksa GitHub sekali sehari untuk rilis baru dan menampilkan pengingat. Nonaktif secara bawaan.",
     "openReleases": "Buka Rilis GitHub",
     "restartAfterUpdate": "Mulai ulang FreeLLMAPI setelah proses build selesai."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Penyedia",
     "checklistSummary": "{configured} dari {total} penyedia telah dikonfigurasi",
     "checklistKeyless": "tidak perlu kunci",
+    "checklistNoKeyTip": "Belum ada kunci yang ditambahkan. Klik untuk menambahkan.",
+    "checklistKeylessTip": "Berfungsi tanpa kunci.",
     "tabQuotaSignals": "Sinyal kuota",
     "tabApiKey": "Kunci API terpadu",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Buat profil",
     "cpRotate": "Rotasi kunci",
     "cpKeyOnce": "Salin kunci ini sekarang — tidak akan ditampilkan lagi.",
-    "cpEnabledAria": "Profil aktif"
+    "cpEnabledAria": "Profil aktif",
+    "selectKey": "Pilih kunci ini",
+    "bulkSelected": "{count} dipilih",
+    "bulkEnable": "Aktifkan semua",
+    "bulkDisable": "Nonaktifkan semua",
+    "bulkDelete": "Hapus semua",
+    "bulkDeleteConfirm": "Hapus {count}?",
+    "bulkResult": "Diperbarui {done}; gagal {failed}.",
+    "bulkDeleteResult": "Dihapus {done}; gagal {failed}."
   },
   "status": {
     "healthy": "sehat",
@@ -841,5 +853,14 @@
     "manualHint": "URL dasar dan kunci untuk dimasukkan ke pengaturan alat itu sendiri.",
     "endpoint": "Titik akhir",
     "documentation": "Dokumentasi"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

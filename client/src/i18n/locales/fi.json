@@ -159,6 +159,8 @@
     "notGitInstall": "Tämä asennus ei sisällä commit-tietoja.",
     "checkFailed": "Päivitysten tarkistaminen epäonnistui.",
     "contactsGithub": "Tarkistukset tehdään manuaalisesti ja ne ottavat yhteyden GitHubiin.",
+    "autoUpdateCheck": "Automaattinen päivitystarkistus",
+    "autoUpdateCheckHelp": "Tarkistaa GitHubista kerran päivässä, onko uutta julkaisua, ja näyttää muistutuksen. Oletuksena pois päältä.",
     "openReleases": "Avaa GitHub-julkaisut",
     "restartAfterUpdate": "Käynnistä FreeLLMAPI uudelleen koonnin valmistuttua."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Palveluntarjoajat",
     "checklistSummary": "{configured}/{total} palveluntarjoajaa määritetty",
     "checklistKeyless": "avainta ei tarvita",
+    "checklistNoKeyTip": "Avainta ei ole vielä lisätty. Lisää napsauttamalla.",
+    "checklistKeylessTip": "Toimii ilman avainta.",
     "tabQuotaSignals": "Kiintiösignaalit",
     "tabApiKey": "Yhtenäinen API avain",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Luo profiili",
     "cpRotate": "Vaihda avain",
     "cpKeyOnce": "Kopioi tämä avain nyt — sitä ei näytetä uudelleen.",
-    "cpEnabledAria": "Profiili käytössä"
+    "cpEnabledAria": "Profiili käytössä",
+    "selectKey": "Valitse tämä avain",
+    "bulkSelected": "{count} valittu",
+    "bulkEnable": "Ota kaikki käyttöön",
+    "bulkDisable": "Poista kaikki käytöstä",
+    "bulkDelete": "Poista kaikki",
+    "bulkDeleteConfirm": "Poistetaanko {count}?",
+    "bulkResult": "Päivitetty {done}; epäonnistui {failed}.",
+    "bulkDeleteResult": "Poistettu {done}; epäonnistui {failed}."
   },
   "status": {
     "healthy": "terve",
@@ -841,5 +853,14 @@
     "manualHint": "Perus-URL ja avain työkalun omiin asetuksiin.",
     "endpoint": "Päätepiste",
     "documentation": "Dokumentaatio"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

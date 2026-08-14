@@ -74,6 +74,8 @@ export const PREFIX_MAP: Record<string, string> = {
   SEA_LION_: 'sealion',
   MODELSCOPE_: 'modelscope',
   MODEL_SCOPE_: 'modelscope',
+  ANYAPI_: 'anyapi',
+  ANY_API_: 'anyapi',
   AIHORDE_: 'aihorde',
 };
 
@@ -101,6 +103,8 @@ export const AUTH_JSON_PROVIDER_MAP: Record<string, string> = {
   'sea-lion': 'sealion',
   modelscope: 'modelscope',
   'model-scope': 'modelscope',
+  anyapi: 'anyapi',
+  'any-api': 'anyapi',
 };
 
 export function detectPlatform(prefix: string): string | null {

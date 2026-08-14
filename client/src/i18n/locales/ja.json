@@ -159,6 +159,8 @@
     "notGitInstall": "このインストールにはコミット情報が含まれていません。",
     "checkFailed": "アップデートを確認できませんでした。",
     "contactsGithub": "確認は手動で行われ、GitHubに接続します。",
+    "autoUpdateCheck": "自動アップデートチェック",
+    "autoUpdateCheckHelp": "1日1回、新しいリリースがないかGitHubを確認し、通知を表示します。既定では無効です。",
     "openReleases": "GitHub Releasesを開く",
     "restartAfterUpdate": "ビルド完了後にFreeLLMAPIを再起動してください。"
   },
@@ -317,6 +319,8 @@
     "tabProviders": "プロバイダー",
     "checklistSummary": "{total}件中{configured}件のプロバイダーを設定済み",
     "checklistKeyless": "キー不要",
+    "checklistNoKeyTip": "キーがまだ追加されていません。クリックして追加します。",
+    "checklistKeylessTip": "キーなしで利用できます。",
     "tabQuotaSignals": "クォータ信号",
     "tabApiKey": "統一されたAPIキー",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "プロファイルを作成",
     "cpRotate": "キーをローテーション",
     "cpKeyOnce": "このキーを今すぐコピーしてください。二度と表示されません。",
-    "cpEnabledAria": "プロファイル有効"
+    "cpEnabledAria": "プロファイル有効",
+    "selectKey": "このキーを選択",
+    "bulkSelected": "{count} 件選択中",
+    "bulkEnable": "すべて有効にする",
+    "bulkDisable": "すべて無効にする",
+    "bulkDelete": "すべて削除",
+    "bulkDeleteConfirm": "{count} 件を削除しますか？",
+    "bulkResult": "{done} 件を更新しました。{failed} 件が失敗しました。",
+    "bulkDeleteResult": "{done} 件を削除しました。{failed} 件が失敗しました。"
   },
   "status": {
     "healthy": "健康な",
@@ -841,5 +853,14 @@
     "manualHint": "ツール自身の設定に入力するベース URL とキーです。",
     "endpoint": "エンドポイント",
     "documentation": "ドキュメント"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

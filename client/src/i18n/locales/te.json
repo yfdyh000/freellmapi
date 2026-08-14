@@ -159,6 +159,8 @@
     "notGitInstall": "ఈ ఇన్‌స్టాలేషన్‌లో commit సమాచారం లేదు.",
     "checkFailed": "నవీకరణల కోసం తనిఖీ చేయడం సాధ్యం కాలేదు.",
     "contactsGithub": "తనిఖీలు మాన్యువల్‌గా జరుగుతాయి మరియు GitHubను సంప్రదిస్తాయి.",
+    "autoUpdateCheck": "స్వయంచాలక నవీకరణ తనిఖీ",
+    "autoUpdateCheckHelp": "రోజుకు ఒకసారి కొత్త విడుదల కోసం GitHubను తనిఖీ చేసి రిమైండర్‌ను చూపుతుంది. అప్రమేయంగా ఆఫ్‌లో ఉంటుంది.",
     "openReleases": "GitHub విడుదలలను తెరవండి",
     "restartAfterUpdate": "బిల్డ్ పూర్తయిన తర్వాత FreeLLMAPIని పునఃప్రారంభించండి."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "ప్రొవైడర్లు",
     "checklistSummary": "{total}లో {configured} ప్రొవైడర్లు కాన్ఫిగర్ చేయబడ్డాయి",
     "checklistKeyless": "కీ అవసరం లేదు",
+    "checklistNoKeyTip": "ఇంకా కీ జోడించలేదు. జోడించడానికి క్లిక్ చేయండి.",
+    "checklistKeylessTip": "కీ లేకుండా పనిచేస్తుంది.",
     "tabQuotaSignals": "కోటా సంకేతాలు",
     "tabApiKey": "ఏకీకృత API కీ",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "ప్రొఫైల్ సృష్టించండి",
     "cpRotate": "కీ మార్చండి",
     "cpKeyOnce": "ఈ కీని ఇప్పుడే కాపీ చేయండి — ఇది మళ్లీ చూపబడదు.",
-    "cpEnabledAria": "ప్రొఫైల్ ప్రారంభించబడింది"
+    "cpEnabledAria": "ప్రొఫైల్ ప్రారంభించబడింది",
+    "selectKey": "ఈ కీని ఎంచుకోండి",
+    "bulkSelected": "{count} ఎంచుకోబడింది",
+    "bulkEnable": "అన్నింటినీ ప్రారంభించు",
+    "bulkDisable": "అన్నింటినీ నిలిపివేయి",
+    "bulkDelete": "అన్నింటినీ తొలగించు",
+    "bulkDeleteConfirm": "{count} తొలగించాలా?",
+    "bulkResult": "{done} నవీకరించబడింది; {failed} విఫలమైంది.",
+    "bulkDeleteResult": "{done} తొలగించబడింది; {failed} విఫలమైంది."
   },
   "status": {
     "healthy": "ఆరోగ్యకరమైన",
@@ -841,5 +853,14 @@
     "manualHint": "సాధనం సొంత సెట్టింగ్‌లలో నమోదు చేయడానికి బేస్ URL మరియు కీ.",
     "endpoint": "ఎండ్‌పాయింట్",
     "documentation": "డాక్యుమెంటేషన్"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

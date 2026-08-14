@@ -159,6 +159,8 @@
     "notGitInstall": "ಈ ಸ್ಥಾಪನೆಯು ಕಮಿಟ್ ಮಾಹಿತಿಯನ್ನು ಒಳಗೊಂಡಿಲ್ಲ.",
     "checkFailed": "ನವೀಕರಣಗಳಿಗಾಗಿ ಪರಿಶೀಲಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
     "contactsGithub": "ಪರಿಶೀಲನೆಗಳನ್ನು ಹಸ್ತಚಾಲಿತವಾಗಿ ಮಾಡಲಾಗುತ್ತದೆ ಮತ್ತು ಅವು GitHub ಅನ್ನು ಸಂಪರ್ಕಿಸುತ್ತವೆ.",
+    "autoUpdateCheck": "ಸ್ವಯಂಚಾಲಿತ ನವೀಕರಣ ಪರಿಶೀಲನೆ",
+    "autoUpdateCheckHelp": "ದಿನಕ್ಕೊಮ್ಮೆ ಹೊಸ ಬಿಡುಗಡೆಗಾಗಿ GitHub ಅನ್ನು ಪರಿಶೀಲಿಸುತ್ತದೆ ಮತ್ತು ಜ್ಞಾಪನೆ ತೋರಿಸುತ್ತದೆ. ಪೂರ್ವನಿಯೋಜಿತವಾಗಿ ಆಫ್ ಆಗಿದೆ.",
     "openReleases": "GitHub ಬಿಡುಗಡೆಗಳನ್ನು ತೆರೆಯಿರಿ",
     "restartAfterUpdate": "ಬಿಲ್ಡ್ ಪೂರ್ಣಗೊಂಡ ನಂತರ FreeLLMAPI ಅನ್ನು ಮರುಪ್ರಾರಂಭಿಸಿ."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "ಪೂರೈಕೆದಾರರು",
     "checklistSummary": "{total} ರಲ್ಲಿ {configured} ಪೂರೈಕೆದಾರರನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿದೆ",
     "checklistKeyless": "ಕೀ ಅಗತ್ಯವಿಲ್ಲ",
+    "checklistNoKeyTip": "ಇನ್ನೂ ಯಾವುದೇ ಕೀ ಸೇರಿಸಿಲ್ಲ. ಸೇರಿಸಲು ಕ್ಲಿಕ್ ಮಾಡಿ.",
+    "checklistKeylessTip": "ಕೀ ಇಲ್ಲದೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ.",
     "tabQuotaSignals": "ಕೋಟಾ ಸಂಕೇತಗಳು",
     "tabApiKey": "ಏಕೀಕೃತ API ಕೀ",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "ಪ್ರೊಫೈಲ್ ರಚಿಸಿ",
     "cpRotate": "ಕೀ ಬದಲಾಯಿಸಿ",
     "cpKeyOnce": "ಈ ಕೀಯನ್ನು ಈಗಲೇ ನಕಲಿಸಿ — ಇದು ಮತ್ತೆ ತೋರಿಸಲ್ಪಡುವುದಿಲ್ಲ.",
-    "cpEnabledAria": "ಪ್ರೊಫೈಲ್ ಸಕ್ರಿಯ"
+    "cpEnabledAria": "ಪ್ರೊಫೈಲ್ ಸಕ್ರಿಯ",
+    "selectKey": "ಈ ಕೀಲಿಯನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+    "bulkSelected": "{count} ಆಯ್ಕೆಮಾಡಲಾಗಿದೆ",
+    "bulkEnable": "ಎಲ್ಲವನ್ನೂ ಸಕ್ರಿಯಗೊಳಿಸಿ",
+    "bulkDisable": "ಎಲ್ಲವನ್ನೂ ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಿ",
+    "bulkDelete": "ಎಲ್ಲವನ್ನೂ ಅಳಿಸಿ",
+    "bulkDeleteConfirm": "{count} ಅಳಿಸುವುದೇ?",
+    "bulkResult": "{done} ನವೀಕರಿಸಲಾಗಿದೆ; {failed} ವಿಫಲವಾಗಿದೆ.",
+    "bulkDeleteResult": "{done} ಅಳಿಸಲಾಗಿದೆ; {failed} ವಿಫಲವಾಗಿದೆ."
   },
   "status": {
     "healthy": "ಆರೋಗ್ಯಕರ",
@@ -841,5 +853,14 @@
     "manualHint": "ಸಾಧನದ ಸ್ವಂತ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನಮೂದಿಸಲು ಬೇಸ್ URL ಮತ್ತು ಕೀ.",
     "endpoint": "ಅಂತಿಮ ಬಿಂದು",
     "documentation": "ದಾಖಲಾತಿ"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Globe } from 'lucide-react'
 import { useI18n } from '@/i18n'
+import { PLATFORMS, CUSTOM_GROUP } from './shared'
+import type { ApiKey } from '../../../../shared/types'
 
 export function ProxySettingsSection() {
   const { t } = useI18n()
@@ -16,6 +18,17 @@ export function ProxySettingsSection() {
   const { data, isError } = useQuery<{ proxyUrl: string; enabled: boolean; bypassPlatforms: string[]; active: boolean }>({
     queryKey: ['proxy-url'],
     queryFn: () => apiFetch('/api/settings/proxy'),
+  })
+
+  // #825: the per-platform route-via-proxy switch used to live only inside the
+  // group dropdown on the Providers tab (two clicks per platform, no bulk, and
+  // no way to see which platforms route through the proxy at a glance). Render
+  // the same bypass list here as visible switches, one per platform that has
+  // keys — custom endpoints included, so they get a per-endpoint-style toggle
+  // instead of being lumped into a group.
+  const { data: keys = [] } = useQuery<ApiKey[]>({
+    queryKey: ['keys'],
+    queryFn: () => apiFetch('/api/keys'),
   })
 
   // Sync from server when the query refetches; keep the user's typed value
@@ -89,6 +102,38 @@ export function ProxySettingsSection() {
 
       {saveProxy.isError && (
         <p className="text-destructive text-xs mt-2">{(saveProxy.error as Error).message}</p>
+      )}
+
+      {/* #825: visible per-platform route-via-proxy switches, one per platform
+          that has keys. checked = routed through the proxy (not in the bypass
+          list), matching the semantic of the old Providers-tab dropdown item. */}
+      {!isError && enabled && keys.length > 0 && (
+        <div className="mt-4 border-t pt-3">
+          <p className="text-xs font-medium mb-2">{t('keys.routeViaProxy')}</p>
+          <div className="grid gap-1.5 sm:grid-cols-2">
+            {[...PLATFORMS, CUSTOM_GROUP]
+              .filter(p => keys.some(k => k.platform === p.value))
+              .map(p => {
+                const routed = !(data?.bypassPlatforms ?? []).includes(p.value)
+                return (
+                  <label key={p.value} className="flex items-center justify-between gap-2 text-xs">
+                    <span className="min-w-0 truncate">{p.label}</span>
+                    <Switch
+                      size="sm"
+                      checked={routed}
+                      disabled={saveProxy.isPending || !data}
+                      onCheckedChange={(checked) => {
+                        const next = checked
+                          ? (data?.bypassPlatforms ?? []).filter(x => x !== p.value)
+                          : [...(data?.bypassPlatforms ?? []), p.value]
+                        saveProxy.mutate({ bypassPlatforms: next })
+                      }}
+                    />
+                  </label>
+                )
+              })}
+          </div>
+        </div>
       )}
 
       <div className="mt-3 text-[11px] text-muted-foreground">

@@ -147,7 +147,7 @@ export function ModelCombobox({
                   </span>
                 )}
                 {o.sub && ((o.platforms?.length ?? 0) > 1 ? (
-                  <Tooltip text={t('models.servedBy', { providers: (o.platforms ?? []).join(', ') })}>
+                  <Tooltip text={t('models.servedBy', { providers: (o.platforms ?? []).join('\n') })}>
                     <span className="shrink-0 text-xs text-muted-foreground underline decoration-dotted underline-offset-2">{o.sub}</span>
                   </Tooltip>
                 ) : (

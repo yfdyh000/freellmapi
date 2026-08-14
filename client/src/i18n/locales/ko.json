@@ -159,6 +159,8 @@
     "notGitInstall": "이 설치에는 커밋 정보가 포함되어 있지 않습니다.",
     "checkFailed": "업데이트를 확인할 수 없습니다.",
     "contactsGithub": "확인은 수동으로 진행되며 GitHub에 연결합니다.",
+    "autoUpdateCheck": "자동 업데이트 확인",
+    "autoUpdateCheckHelp": "하루에 한 번 GitHub에서 새 릴리스를 확인하고 알림을 표시합니다. 기본값은 꺼짐입니다.",
     "openReleases": "GitHub 릴리스 열기",
     "restartAfterUpdate": "빌드가 완료되면 FreeLLMAPI를 다시 시작하세요."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "공급자",
     "checklistSummary": "{total}개 공급자 중 {configured}개 설정됨",
     "checklistKeyless": "키 필요 없음",
+    "checklistNoKeyTip": "아직 키를 추가하지 않았습니다. 클릭하여 추가하세요.",
+    "checklistKeylessTip": "키 없이 작동합니다.",
     "tabQuotaSignals": "할당량 신호",
     "tabApiKey": "통합 API 키",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "프로필 만들기",
     "cpRotate": "키 교체",
     "cpKeyOnce": "지금 이 키를 복사하세요. 다시 표시되지 않습니다.",
-    "cpEnabledAria": "프로필 활성화됨"
+    "cpEnabledAria": "프로필 활성화됨",
+    "selectKey": "이 키 선택",
+    "bulkSelected": "{count}개 선택됨",
+    "bulkEnable": "모두 활성화",
+    "bulkDisable": "모두 비활성화",
+    "bulkDelete": "모두 삭제",
+    "bulkDeleteConfirm": "{count}개를 삭제할까요?",
+    "bulkResult": "{done}개 업데이트됨, {failed}개 실패.",
+    "bulkDeleteResult": "{done}개 삭제됨, {failed}개 실패."
   },
   "status": {
     "healthy": "건강한",
@@ -841,5 +853,14 @@
     "manualHint": "도구 자체 설정에 입력할 기본 URL과 키입니다.",
     "endpoint": "엔드포인트",
     "documentation": "문서"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

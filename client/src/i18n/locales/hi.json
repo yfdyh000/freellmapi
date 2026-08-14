@@ -159,6 +159,8 @@
     "notGitInstall": "इस इंस्टॉलेशन में कमिट की जानकारी शामिल नहीं है।",
     "checkFailed": "अपडेट की जाँच नहीं की जा सकी।",
     "contactsGithub": "जाँच मैन्युअल रूप से होती है और GitHub से संपर्क करती है।",
+    "autoUpdateCheck": "स्वचालित अपडेट जाँच",
+    "autoUpdateCheckHelp": "दिन में एक बार नई रिलीज़ के लिए GitHub की जाँच करता है और अनुस्मारक दिखाता है। डिफ़ॉल्ट रूप से बंद।",
     "openReleases": "GitHub रिलीज़ खोलें",
     "restartAfterUpdate": "बिल्ड पूरा होने के बाद FreeLLMAPI को पुनः आरंभ करें।"
   },
@@ -317,6 +319,8 @@
     "tabProviders": "प्रदाता",
     "checklistSummary": "{total} में से {configured} प्रदाता कॉन्फ़िगर किए गए",
     "checklistKeyless": "कुंजी की आवश्यकता नहीं",
+    "checklistNoKeyTip": "अभी तक कोई कुंजी नहीं जोड़ी गई। जोड़ने के लिए क्लिक करें।",
+    "checklistKeylessTip": "कुंजी के बिना काम करता है।",
     "tabQuotaSignals": "कोटा संकेत",
     "tabApiKey": "एकीकृत API कुंजी",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "प्रोफ़ाइल बनाएँ",
     "cpRotate": "कुंजी बदलें",
     "cpKeyOnce": "इस कुंजी को अभी कॉपी करें — यह दोबारा नहीं दिखाई जाएगी।",
-    "cpEnabledAria": "प्रोफ़ाइल सक्षम"
+    "cpEnabledAria": "प्रोफ़ाइल सक्षम",
+    "selectKey": "यह कुंजी चुनें",
+    "bulkSelected": "{count} चयनित",
+    "bulkEnable": "सभी सक्षम करें",
+    "bulkDisable": "सभी अक्षम करें",
+    "bulkDelete": "सभी हटाएँ",
+    "bulkDeleteConfirm": "{count} हटाएँ?",
+    "bulkResult": "{done} अपडेट हुए; {failed} विफल।",
+    "bulkDeleteResult": "{done} हटाए गए; {failed} विफल।"
   },
   "status": {
     "healthy": "स्वस्थ",
@@ -841,5 +853,14 @@
     "manualHint": "टूल की अपनी सेटिंग्स में डालने के लिए बेस URL और कुंजी।",
     "endpoint": "समापन बिंदु",
     "documentation": "दस्तावेज़ीकरण"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

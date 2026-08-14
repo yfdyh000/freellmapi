@@ -159,6 +159,8 @@
     "notGitInstall": "මෙම ස්ථාපනයේ commit තොරතුරු ඇතුළත් නොවේ.",
     "checkFailed": "යාවත්කාලීන පරීක්ෂා කිරීමට නොහැකි විය.",
     "contactsGithub": "පරීක්ෂා කිරීම් අතින් ක්‍රියාත්මක කරන අතර GitHub සමඟ සම්බන්ධ වේ.",
+    "autoUpdateCheck": "ස්වයංක්‍රීය යාවත්කාලීන පරීක්ෂාව",
+    "autoUpdateCheckHelp": "නව නිකුතුවක් සඳහා දිනකට වරක් GitHub පරීක්ෂා කර මතක් කිරීමක් පෙන්වයි. පෙරනිමියෙන් ක්‍රියාවිරහිතයි.",
     "openReleases": "GitHub Releases විවෘත කරන්න",
     "restartAfterUpdate": "ගොඩනැගීම සම්පූර්ණ වූ පසු FreeLLMAPI නැවත ආරම්භ කරන්න."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "සපයන්නන්",
     "checklistSummary": "සපයන්නන් {total} දෙනාගෙන් {configured} ක් වින්‍යාස කර ඇත",
     "checklistKeyless": "යතුරක් අවශ්‍ය නැත",
+    "checklistNoKeyTip": "තවම යතුරක් එක් කර නැත. එක් කිරීමට ක්ලික් කරන්න.",
+    "checklistKeylessTip": "යතුරක් නොමැතිව ක්‍රියා කරයි.",
     "tabQuotaSignals": "කෝටා සංඥා",
     "tabApiKey": "ඒකාබද්ධ API යතුර",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "පැතිකඩ සාදන්න",
     "cpRotate": "යතුර මාරු කරන්න",
     "cpKeyOnce": "මෙම යතුර දැන්ම පිටපත් කරන්න — එය නැවත නොපෙන්වයි.",
-    "cpEnabledAria": "පැතිකඩ සක්‍රීයයි"
+    "cpEnabledAria": "පැතිකඩ සක්‍රීයයි",
+    "selectKey": "මෙම යතුර තෝරන්න",
+    "bulkSelected": "{count} තෝරා ඇත",
+    "bulkEnable": "සියල්ල සබල කරන්න",
+    "bulkDisable": "සියල්ල අබල කරන්න",
+    "bulkDelete": "සියල්ල මකන්න",
+    "bulkDeleteConfirm": "{count} මකන්නද?",
+    "bulkResult": "{done} යාවත්කාලීන කළා; {failed} අසාර්ථකයි.",
+    "bulkDeleteResult": "{done} මකා දැමුවා; {failed} අසාර්ථකයි."
   },
   "status": {
     "healthy": "සෞඛ්ය සම්පන්න",
@@ -841,5 +853,14 @@
     "manualHint": "මෙවලමේම සැකසුම් තුළ ඇතුළත් කිරීමට මූලික URL සහ යතුර.",
     "endpoint": "අන්ත ලක්ෂ්‍යය",
     "documentation": "ලේඛන"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

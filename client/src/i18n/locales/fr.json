@@ -159,6 +159,8 @@
     "notGitInstall": "Cette installation ne contient aucune information de commit.",
     "checkFailed": "Impossible de rechercher les mises à jour.",
     "contactsGithub": "Les vérifications sont effectuées manuellement et contactent GitHub.",
+    "autoUpdateCheck": "Vérification automatique des mises à jour",
+    "autoUpdateCheckHelp": "Consulte GitHub une fois par jour pour détecter une nouvelle version et affiche un rappel. Désactivé par défaut.",
     "openReleases": "Ouvrir les versions GitHub",
     "restartAfterUpdate": "Redémarrez FreeLLMAPI une fois le build terminé."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Fournisseurs",
     "checklistSummary": "{configured} fournisseurs sur {total} configurés",
     "checklistKeyless": "aucune clé requise",
+    "checklistNoKeyTip": "Aucune clé ajoutée pour l'instant. Cliquez pour en ajouter une.",
+    "checklistKeylessTip": "Fonctionne sans clé.",
     "tabQuotaSignals": "Signaux de quota",
     "tabApiKey": "Clé d'API unifiée",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Créer le profil",
     "cpRotate": "Renouveler la clé",
     "cpKeyOnce": "Copiez cette clé maintenant — elle ne sera plus affichée.",
-    "cpEnabledAria": "Profil activé"
+    "cpEnabledAria": "Profil activé",
+    "selectKey": "Sélectionner cette clé",
+    "bulkSelected": "{count} sélectionnées",
+    "bulkEnable": "Tout activer",
+    "bulkDisable": "Tout désactiver",
+    "bulkDelete": "Tout supprimer",
+    "bulkDeleteConfirm": "Supprimer {count} ?",
+    "bulkResult": "Mises à jour : {done}. Échecs : {failed}.",
+    "bulkDeleteResult": "Supprimées : {done}. Échecs : {failed}."
   },
   "status": {
     "healthy": "sain",
@@ -841,5 +853,14 @@
     "manualHint": "URL de base et clé à saisir dans les réglages de l'outil.",
     "endpoint": "Endpoint",
     "documentation": "Documentation"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

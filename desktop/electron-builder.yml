@@ -47,9 +47,6 @@ win:
     - target: nsis
       arch:
         - x64
-    # Green/portable-friendly multi-file build: unzip anywhere (e.g. a non-C
-    # drive) and run — no installer, no %TEMP% extraction at runtime. Updates
-    # are a simple unzip-over. Ships alongside the NSIS installer.
     - target: zip
       arch:
         - x64

@@ -159,6 +159,8 @@
     "notGitInstall": "Den här installationen innehåller ingen commit-information.",
     "checkFailed": "Det gick inte att söka efter uppdateringar.",
     "contactsGithub": "Kontroller görs manuellt och kontaktar GitHub.",
+    "autoUpdateCheck": "Automatisk uppdateringskontroll",
+    "autoUpdateCheckHelp": "Kontrollerar GitHub en gång om dagen efter en ny version och visar en påminnelse. Av som standard.",
     "openReleases": "Öppna GitHub Releases",
     "restartAfterUpdate": "Starta om FreeLLMAPI när bygget är klart."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Leverantörer",
     "checklistSummary": "{configured} av {total} leverantörer konfigurerade",
     "checklistKeyless": "ingen nyckel krävs",
+    "checklistNoKeyTip": "Ingen nyckel har lagts till än. Klicka för att lägga till en.",
+    "checklistKeylessTip": "Fungerar utan nyckel.",
     "tabQuotaSignals": "Kvotsignaler",
     "tabApiKey": "Enhetlig API nyckel",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Skapa profil",
     "cpRotate": "Rotera nyckel",
     "cpKeyOnce": "Kopiera nyckeln nu — den visas inte igen.",
-    "cpEnabledAria": "Profil aktiverad"
+    "cpEnabledAria": "Profil aktiverad",
+    "selectKey": "Välj den här nyckeln",
+    "bulkSelected": "{count} valda",
+    "bulkEnable": "Aktivera alla",
+    "bulkDisable": "Inaktivera alla",
+    "bulkDelete": "Radera alla",
+    "bulkDeleteConfirm": "Radera {count}?",
+    "bulkResult": "Uppdaterade {done}; misslyckades {failed}.",
+    "bulkDeleteResult": "Raderade {done}; misslyckades {failed}."
   },
   "status": {
     "healthy": "Hälsosamt",
@@ -841,5 +853,14 @@
     "manualHint": "Bas-URL och nyckel att ange i verktygets egna inställningar.",
     "endpoint": "Slutpunkt",
     "documentation": "Dokumentation"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

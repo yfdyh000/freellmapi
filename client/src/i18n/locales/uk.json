@@ -159,6 +159,8 @@
     "notGitInstall": "Ця інсталяція не містить інформації про commit.",
     "checkFailed": "Не вдалося перевірити наявність оновлень.",
     "contactsGithub": "Перевірки запускаються вручну та звертаються до GitHub.",
+    "autoUpdateCheck": "Автоматична перевірка оновлень",
+    "autoUpdateCheckHelp": "Раз на день перевіряє GitHub на новий випуск і показує нагадування. Типово вимкнено.",
     "openReleases": "Відкрити релізи GitHub",
     "restartAfterUpdate": "Перезапустіть FreeLLMAPI після завершення збірки."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Провайдери",
     "checklistSummary": "Налаштовано {configured} із {total} провайдерів",
     "checklistKeyless": "ключ не потрібен",
+    "checklistNoKeyTip": "Ключ ще не додано. Натисніть, щоб додати.",
+    "checklistKeylessTip": "Працює без ключа.",
     "tabQuotaSignals": "Сигнали квоти",
     "tabApiKey": "Уніфікований ключ API",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Створити профіль",
     "cpRotate": "Змінити ключ",
     "cpKeyOnce": "Скопіюйте цей ключ зараз — він більше не показуватиметься.",
-    "cpEnabledAria": "Профіль увімкнено"
+    "cpEnabledAria": "Профіль увімкнено",
+    "selectKey": "Вибрати цей ключ",
+    "bulkSelected": "Вибрано {count}",
+    "bulkEnable": "Увімкнути всі",
+    "bulkDisable": "Вимкнути всі",
+    "bulkDelete": "Видалити всі",
+    "bulkDeleteConfirm": "Видалити {count}?",
+    "bulkResult": "Оновлено {done}; не вдалося {failed}.",
+    "bulkDeleteResult": "Видалено {done}; не вдалося {failed}."
   },
   "status": {
     "healthy": "здоровий",
@@ -841,5 +853,14 @@
     "manualHint": "Базовий URL і ключ для введення в налаштуваннях самого інструмента.",
     "endpoint": "Кінцева точка",
     "documentation": "Документація"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

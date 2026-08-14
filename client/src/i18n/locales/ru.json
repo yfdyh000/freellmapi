@@ -159,6 +159,8 @@
     "notGitInstall": "Эта установка не содержит сведений о коммите.",
     "checkFailed": "Не удалось проверить наличие обновлений.",
     "contactsGithub": "Проверка запускается вручную и обращается к GitHub.",
+    "autoUpdateCheck": "Автоматическая проверка обновлений",
+    "autoUpdateCheckHelp": "Раз в день проверяет на GitHub наличие нового выпуска и показывает напоминание. По умолчанию выключено.",
     "openReleases": "Открыть релизы на GitHub",
     "restartAfterUpdate": "Перезапустите FreeLLMAPI после завершения сборки."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Провайдеры",
     "checklistSummary": "Настроено {configured} из {total} провайдеров",
     "checklistKeyless": "ключ не нужен",
+    "checklistNoKeyTip": "Ключ ещё не добавлен. Нажмите, чтобы добавить.",
+    "checklistKeylessTip": "Работает без ключа.",
     "tabQuotaSignals": "Сигналы квоты",
     "tabApiKey": "Единый ключ API",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Создать профиль",
     "cpRotate": "Сменить ключ",
     "cpKeyOnce": "Скопируйте этот ключ сейчас — он больше не будет показан.",
-    "cpEnabledAria": "Профиль включён"
+    "cpEnabledAria": "Профиль включён",
+    "selectKey": "Выбрать этот ключ",
+    "bulkSelected": "Выбрано {count}",
+    "bulkEnable": "Включить все",
+    "bulkDisable": "Отключить все",
+    "bulkDelete": "Удалить все",
+    "bulkDeleteConfirm": "Удалить {count}?",
+    "bulkResult": "Обновлено {done}; не удалось {failed}.",
+    "bulkDeleteResult": "Удалено {done}; не удалось {failed}."
   },
   "status": {
     "healthy": "здоровый",
@@ -841,5 +853,14 @@
     "manualHint": "Базовый URL и ключ для ввода в настройках самого инструмента.",
     "endpoint": "Эндпоинт",
     "documentation": "Документация"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

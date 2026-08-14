@@ -159,6 +159,8 @@
     "notGitInstall": "Šiame diegime nėra informacijos apie Git įrašus.",
     "checkFailed": "Nepavyko patikrinti, ar yra naujinių.",
     "contactsGithub": "Tikrinimas atliekamas rankiniu būdu ir susisiekiama su GitHub.",
+    "autoUpdateCheck": "Automatinis atnaujinimų tikrinimas",
+    "autoUpdateCheckHelp": "Kartą per dieną patikrina „GitHub“, ar yra nauja laida, ir parodo priminimą. Pagal numatytuosius nustatymus išjungta.",
     "openReleases": "Atverti GitHub leidimus",
     "restartAfterUpdate": "Baigę komponuoti paleiskite FreeLLMAPI iš naujo."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Tiekėjai",
     "checklistSummary": "Sukonfigūruota {configured} iš {total} tiekėjų",
     "checklistKeyless": "rakto nereikia",
+    "checklistNoKeyTip": "Raktas dar nepridėtas. Spustelėkite, kad pridėtumėte.",
+    "checklistKeylessTip": "Veikia be rakto.",
     "tabQuotaSignals": "Kvotų signalai",
     "tabApiKey": "Vieningas API raktas",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Sukurti profilį",
     "cpRotate": "Pakeisti raktą",
     "cpKeyOnce": "Nukopijuokite šį raktą dabar — jis daugiau nebus rodomas.",
-    "cpEnabledAria": "Profilis įjungtas"
+    "cpEnabledAria": "Profilis įjungtas",
+    "selectKey": "Pasirinkti šį raktą",
+    "bulkSelected": "Pasirinkta {count}",
+    "bulkEnable": "Įjungti visus",
+    "bulkDisable": "Išjungti visus",
+    "bulkDelete": "Ištrinti visus",
+    "bulkDeleteConfirm": "Ištrinti {count}?",
+    "bulkResult": "Atnaujinta {done}; nepavyko {failed}.",
+    "bulkDeleteResult": "Ištrinta {done}; nepavyko {failed}."
   },
   "status": {
     "healthy": "Sveika",
@@ -841,5 +853,14 @@
     "manualHint": "Bazinis URL ir raktas, kuriuos reikia įvesti paties įrankio nustatymuose.",
     "endpoint": "Galinis taškas",
     "documentation": "Dokumentacija"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -159,6 +159,8 @@
     "notGitInstall": "Diese Installation enthält keine Commit-Informationen.",
     "checkFailed": "Aktualisierungen konnten nicht geprüft werden.",
     "contactsGithub": "Prüfungen erfolgen manuell und stellen eine Verbindung zu GitHub her.",
+    "autoUpdateCheck": "Automatische Updateprüfung",
+    "autoUpdateCheckHelp": "Prüft einmal täglich auf GitHub, ob es eine neue Version gibt, und zeigt eine Erinnerung an. Standardmäßig deaktiviert.",
     "openReleases": "GitHub-Releases öffnen",
     "restartAfterUpdate": "FreeLLMAPI nach Abschluss des Builds neu starten."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Anbieter",
     "checklistSummary": "{configured} von {total} Anbietern eingerichtet",
     "checklistKeyless": "kein Schlüssel nötig",
+    "checklistNoKeyTip": "Noch kein Schlüssel hinzugefügt. Zum Hinzufügen klicken.",
+    "checklistKeylessTip": "Funktioniert ohne Schlüssel.",
     "tabQuotaSignals": "Quotensignale",
     "tabApiKey": "Einheitlicher API-Schlüssel",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Profil erstellen",
     "cpRotate": "Schlüssel rotieren",
     "cpKeyOnce": "Kopiere diesen Schlüssel jetzt — er wird nicht erneut angezeigt.",
-    "cpEnabledAria": "Profil aktiviert"
+    "cpEnabledAria": "Profil aktiviert",
+    "selectKey": "Diesen Schlüssel auswählen",
+    "bulkSelected": "{count} ausgewählt",
+    "bulkEnable": "Alle aktivieren",
+    "bulkDisable": "Alle deaktivieren",
+    "bulkDelete": "Alle löschen",
+    "bulkDeleteConfirm": "{count} löschen?",
+    "bulkResult": "Aktualisiert {done}; fehlgeschlagen {failed}.",
+    "bulkDeleteResult": "Gelöscht {done}; fehlgeschlagen {failed}."
   },
   "status": {
     "healthy": "gesund",
@@ -841,5 +853,14 @@
     "manualHint": "Basis-URL und Schlüssel für die eigenen Einstellungen des Tools.",
     "endpoint": "Endpunkt",
     "documentation": "Dokumentation"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

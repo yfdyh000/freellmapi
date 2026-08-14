@@ -159,6 +159,8 @@
     "notGitInstall": "Bu quraşdırmada commit məlumatı yoxdur.",
     "checkFailed": "Yeniləmələri yoxlamaq mümkün olmadı.",
     "contactsGithub": "Yoxlamalar əl ilə başladılır və GitHub-a qoşulur.",
+    "autoUpdateCheck": "Avtomatik yeniləmə yoxlaması",
+    "autoUpdateCheckHelp": "Gündə bir dəfə yeni buraxılış üçün GitHub-u yoxlayır və xatırlatma göstərir. Standart olaraq sönülüdür.",
     "openReleases": "GitHub buraxılışlarını aç",
     "restartAfterUpdate": "Quruluş tamamlandıqdan sonra FreeLLMAPI-ni yenidən başladın."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Təchizatçılar",
     "checklistSummary": "{total} təchizatçıdan {configured} qurulub",
     "checklistKeyless": "açar tələb olunmur",
+    "checklistNoKeyTip": "Hələ açar əlavə edilməyib. Əlavə etmək üçün klikləyin.",
+    "checklistKeylessTip": "Açarsız işləyir.",
     "tabQuotaSignals": "Kvota siqnalları",
     "tabApiKey": "Birləşmiş API açarı",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Profil yarat",
     "cpRotate": "Açarı dəyiş",
     "cpKeyOnce": "Bu açarı indi kopyalayın — bir daha göstərilməyəcək.",
-    "cpEnabledAria": "Profil aktivdir"
+    "cpEnabledAria": "Profil aktivdir",
+    "selectKey": "Bu açarı seçin",
+    "bulkSelected": "{count} seçildi",
+    "bulkEnable": "Hamısını aktiv et",
+    "bulkDisable": "Hamısını deaktiv et",
+    "bulkDelete": "Hamısını sil",
+    "bulkDeleteConfirm": "{count} silinsin?",
+    "bulkResult": "Yeniləndi {done}; uğursuz {failed}.",
+    "bulkDeleteResult": "Silindi {done}; uğursuz {failed}."
   },
   "status": {
     "healthy": "sağlam",
@@ -841,5 +853,14 @@
     "manualHint": "Alətin öz parametrlərinə daxil ediləcək əsas URL və açar.",
     "endpoint": "Endpoint",
     "documentation": "Sənədlər"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

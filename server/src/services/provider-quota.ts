@@ -141,13 +141,16 @@ function inferPoolForPlatform(platform: Platform, modelId?: string | null): stri
   if (platform === 'navy') return 'navy::free';
   if (platform === 'nara') return 'nara::free';
   if (platform === 'sealion') return 'sealion::free';
+  // AnyAPI: the free tier is one 100K-tokens/day budget for the whole account,
+  // shared across every free/basic model — so one pool, not one per model.
+  if (platform === 'anyapi') return 'anyapi::free';
   // ModelScope: one 2000-requests/day quota across the whole account.
   if (platform === 'modelscope') return 'modelscope::account';
   return normalizedModelId ? `${platform}::${normalizedModelId}` : `${platform}::account`;
 }
 
 function isSharedPool(platform: Platform): boolean {
-  return ['openrouter', 'google', 'groq', 'cerebras', 'sambanova', 'nvidia', 'mistral', 'github', 'cohere', 'cloudflare', 'zhipu', 'ollama', 'kilo', 'pollinations', 'llm7', 'huggingface', 'opencode', 'routeway', 'bazaarlink', 'ainative', 'aion', 'requesty', 'navy', 'nara', 'sealion', 'modelscope', 'aihorde'].includes(platform);
+  return ['openrouter', 'google', 'groq', 'cerebras', 'sambanova', 'nvidia', 'mistral', 'github', 'cohere', 'cloudflare', 'zhipu', 'ollama', 'kilo', 'pollinations', 'llm7', 'huggingface', 'opencode', 'routeway', 'bazaarlink', 'ainative', 'aion', 'requesty', 'navy', 'nara', 'sealion', 'anyapi', 'modelscope', 'aihorde'].includes(platform);
 }
 
 type HeaderSpec = { metric: QuotaMetric; limit: string; remaining?: string; reset?: string; strategy?: QuotaResetStrategy };

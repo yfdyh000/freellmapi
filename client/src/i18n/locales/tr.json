@@ -159,6 +159,8 @@
     "notGitInstall": "Bu kurulum commit bilgisi içermiyor.",
     "checkFailed": "Güncellemeler denetlenemedi.",
     "contactsGithub": "Denetimler elle yapılır ve GitHub ile iletişim kurar.",
+    "autoUpdateCheck": "Otomatik güncelleme denetimi",
+    "autoUpdateCheckHelp": "Yeni bir sürüm için günde bir kez GitHub'ı denetler ve bir hatırlatma gösterir. Varsayılan olarak kapalıdır.",
     "openReleases": "GitHub Sürümlerini Aç",
     "restartAfterUpdate": "Derleme tamamlandıktan sonra FreeLLMAPI'yi yeniden başlatın."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Sağlayıcılar",
     "checklistSummary": "{total} sağlayıcıdan {configured} tanesi yapılandırıldı",
     "checklistKeyless": "anahtar gerekmez",
+    "checklistNoKeyTip": "Henüz anahtar eklenmedi. Eklemek için tıklayın.",
+    "checklistKeylessTip": "Anahtarsız çalışır.",
     "tabQuotaSignals": "Kota sinyalleri",
     "tabApiKey": "Birleşik API anahtarı",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Profil oluştur",
     "cpRotate": "Anahtarı yenile",
     "cpKeyOnce": "Bu anahtarı şimdi kopyalayın — bir daha gösterilmeyecek.",
-    "cpEnabledAria": "Profil etkin"
+    "cpEnabledAria": "Profil etkin",
+    "selectKey": "Bu anahtarı seç",
+    "bulkSelected": "{count} seçildi",
+    "bulkEnable": "Tümünü etkinleştir",
+    "bulkDisable": "Tümünü devre dışı bırak",
+    "bulkDelete": "Tümünü sil",
+    "bulkDeleteConfirm": "{count} silinsin mi?",
+    "bulkResult": "Güncellenen {done}; başarısız {failed}.",
+    "bulkDeleteResult": "Silinen {done}; başarısız {failed}."
   },
   "status": {
     "healthy": "sağlıklı",
@@ -841,5 +853,14 @@
     "manualHint": "Aracın kendi ayarlarına girilecek temel URL ve anahtar.",
     "endpoint": "Uç nokta",
     "documentation": "Dokümantasyon"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -159,6 +159,8 @@
     "notGitInstall": "આ ઇન્સ્ટોલેશનમાં કમિટની માહિતી શામેલ નથી.",
     "checkFailed": "અપડેટ્સ તપાસી શકાયા નથી.",
     "contactsGithub": "તપાસો મેન્યુઅલી કરવામાં આવે છે અને GitHubનો સંપર્ક કરે છે.",
+    "autoUpdateCheck": "આપમેળે અપડેટ તપાસ",
+    "autoUpdateCheckHelp": "દિવસમાં એક વાર નવા રિલીઝ માટે GitHub તપાસે છે અને રિમાઇન્ડર બતાવે છે. મૂળભૂત રીતે બંધ.",
     "openReleases": "GitHub રિલીઝ ખોલો",
     "restartAfterUpdate": "બિલ્ડ પૂર્ણ થયા પછી FreeLLMAPI ફરી શરૂ કરો."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "પ્રદાતાઓ",
     "checklistSummary": "{total} માંથી {configured} પ્રદાતાઓ ગોઠવેલા છે",
     "checklistKeyless": "કીની જરૂર નથી",
+    "checklistNoKeyTip": "હજી સુધી કોઈ કી ઉમેરી નથી. ઉમેરવા માટે ક્લિક કરો.",
+    "checklistKeylessTip": "કી વિના કામ કરે છે.",
     "tabQuotaSignals": "ક્વોટા સંકેતો",
     "tabApiKey": "એકીકૃત API કી",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "પ્રોફાઇલ બનાવો",
     "cpRotate": "કી બદલો",
     "cpKeyOnce": "આ કી હમણાં જ કૉપિ કરો — તે ફરી બતાવવામાં આવશે નહીં.",
-    "cpEnabledAria": "પ્રોફાઇલ સક્ષમ"
+    "cpEnabledAria": "પ્રોફાઇલ સક્ષમ",
+    "selectKey": "આ કી પસંદ કરો",
+    "bulkSelected": "{count} પસંદ કરેલ",
+    "bulkEnable": "બધું સક્ષમ કરો",
+    "bulkDisable": "બધું અક્ષમ કરો",
+    "bulkDelete": "બધું કાઢી નાખો",
+    "bulkDeleteConfirm": "{count} કાઢી નાખવી?",
+    "bulkResult": "{done} અપડેટ થયા; {failed} નિષ્ફળ.",
+    "bulkDeleteResult": "{done} કાઢી નાખ્યા; {failed} નિષ્ફળ."
   },
   "status": {
     "healthy": "સ્વસ્થ",
@@ -841,5 +853,14 @@
     "manualHint": "ટૂલની પોતાની સેટિંગ્સમાં દાખલ કરવા માટે બેઝ URL અને કી.",
     "endpoint": "એન્ડપોઇન્ટ",
     "documentation": "દસ્તાવેજીકરણ"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -159,6 +159,8 @@
     "notGitInstall": "यो स्थापनामा commit जानकारी समावेश छैन।",
     "checkFailed": "अद्यावधिकहरू जाँच गर्न सकिएन।",
     "contactsGithub": "जाँचहरू म्यानुअल रूपमा गरिन्छन् र GitHub सँग सम्पर्क गर्छन्।",
+    "autoUpdateCheck": "स्वचालित अद्यावधिक जाँच",
+    "autoUpdateCheckHelp": "दिनमा एक पटक नयाँ रिलिजका लागि GitHub जाँच गर्छ र सम्झना देखाउँछ। पूर्वनिर्धारित रूपमा बन्द।",
     "openReleases": "GitHub रिलीजहरू खोल्नुहोस्",
     "restartAfterUpdate": "बिल्ड पूरा भएपछि FreeLLMAPI पुनः सुरु गर्नुहोस्।"
   },
@@ -317,6 +319,8 @@
     "tabProviders": "प्रदायकहरू",
     "checklistSummary": "{total} मध्ये {configured} प्रदायकहरू कन्फिगर गरिएको",
     "checklistKeyless": "कुञ्जी आवश्यक छैन",
+    "checklistNoKeyTip": "अहिलेसम्म कुनै कुञ्जी थपिएको छैन। थप्न क्लिक गर्नुहोस्।",
+    "checklistKeylessTip": "कुञ्जी बिना काम गर्छ।",
     "tabQuotaSignals": "कोटा सङ्केतहरू",
     "tabApiKey": "एकीकृत API कुञ्जी",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "प्रोफाइल बनाउनुहोस्",
     "cpRotate": "कुञ्जी बदल्नुहोस्",
     "cpKeyOnce": "यो कुञ्जी अहिल्यै कपी गर्नुहोस् — यो फेरि देखाइने छैन।",
-    "cpEnabledAria": "प्रोफाइल सक्षम"
+    "cpEnabledAria": "प्रोफाइल सक्षम",
+    "selectKey": "यो कुञ्जी चयन गर्नुहोस्",
+    "bulkSelected": "{count} चयन गरिएको",
+    "bulkEnable": "सबै सक्षम पार्नुहोस्",
+    "bulkDisable": "सबै अक्षम पार्नुहोस्",
+    "bulkDelete": "सबै मेट्नुहोस्",
+    "bulkDeleteConfirm": "{count} मेट्ने?",
+    "bulkResult": "{done} अद्यावधिक भयो; {failed} असफल ।",
+    "bulkDeleteResult": "{done} मेटियो; {failed} असफल ।"
   },
   "status": {
     "healthy": "स्वस्थ छ",
@@ -841,5 +853,14 @@
     "manualHint": "उपकरणकै सेटिङमा राख्न बेस URL र कुञ्जी।",
     "endpoint": "एन्डपोइन्ट",
     "documentation": "दस्तावेज"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

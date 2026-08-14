@@ -159,6 +159,8 @@
     "notGitInstall": "This installation does not include commit information.",
     "checkFailed": "Could not check for updates.",
     "contactsGithub": "Checks are manual and contact GitHub.",
+    "autoUpdateCheck": "Automatic update check",
+    "autoUpdateCheckHelp": "Checks GitHub once a day for a new release and shows a reminder. Off by default.",
     "openReleases": "Open GitHub Releases",
     "restartAfterUpdate": "Restart FreeLLMAPI after the build completes."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Providers",
     "checklistSummary": "{configured} of {total} providers configured",
     "checklistKeyless": "no key needed",
+    "checklistNoKeyTip": "No key added yet. Click to add one.",
+    "checklistKeylessTip": "Works without a key.",
     "tabQuotaSignals": "Quota signals",
     "tabApiKey": "Unified API key",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Create profile",
     "cpRotate": "Rotate key",
     "cpKeyOnce": "Copy this key now — it won't be shown again.",
-    "cpEnabledAria": "Profile enabled"
+    "cpEnabledAria": "Profile enabled",
+    "selectKey": "Select this key",
+    "bulkSelected": "{count} selected",
+    "bulkEnable": "Enable all",
+    "bulkDisable": "Disable all",
+    "bulkDelete": "Delete all",
+    "bulkDeleteConfirm": "Delete {count}?",
+    "bulkResult": "Updated {done}; failed {failed}.",
+    "bulkDeleteResult": "Deleted {done}; failed {failed}."
   },
   "status": {
     "healthy": "healthy",
@@ -841,5 +853,14 @@
     "url": "Enter a valid URL starting with http:// or https://",
     "email": "Enter a valid email address",
     "passwordMin": "At least {min} characters"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

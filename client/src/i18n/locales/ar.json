@@ -159,6 +159,8 @@
     "notGitInstall": "لا يتضمن هذا التثبيت معلومات الالتزام.",
     "checkFailed": "تعذر التحقق من وجود تحديثات.",
     "contactsGithub": "تُجرى عمليات التحقق يدويًا وتتصل بـ GitHub.",
+    "autoUpdateCheck": "التحقق التلقائي من التحديثات",
+    "autoUpdateCheckHelp": "يتحقق من GitHub مرة واحدة يوميًا بحثًا عن إصدار جديد ويعرض تذكيرًا. مُعطَّل افتراضيًا.",
     "openReleases": "فتح إصدارات GitHub",
     "restartAfterUpdate": "أعد تشغيل FreeLLMAPI بعد اكتمال البنية."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "مقدمي الخدمات",
     "checklistSummary": "تم إعداد {configured} من {total} من مقدمي الخدمات",
     "checklistKeyless": "لا حاجة لمفتاح",
+    "checklistNoKeyTip": "لم تتم إضافة أي مفتاح بعد. انقر لإضافة مفتاح.",
+    "checklistKeylessTip": "يعمل بدون مفتاح.",
     "tabQuotaSignals": "إشارات الحصص",
     "tabApiKey": "مفتاح API الموحد",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "إنشاء ملف تعريف",
     "cpRotate": "تدوير المفتاح",
     "cpKeyOnce": "انسخ هذا المفتاح الآن — لن يظهر مرة أخرى.",
-    "cpEnabledAria": "الملف مفعّل"
+    "cpEnabledAria": "الملف مفعّل",
+    "selectKey": "حدد هذا المفتاح",
+    "bulkSelected": "تم تحديد {count}",
+    "bulkEnable": "تمكين الكل",
+    "bulkDisable": "تعطيل الكل",
+    "bulkDelete": "حذف الكل",
+    "bulkDeleteConfirm": "حذف {count}؟",
+    "bulkResult": "تم تحديث {done}؛ فشل {failed}.",
+    "bulkDeleteResult": "تم حذف {done}؛ فشل {failed}."
   },
   "status": {
     "healthy": "صحي",
@@ -841,5 +853,14 @@
     "manualHint": "عنوان URL الأساسي والمفتاح لإدخالهما في إعدادات الأداة نفسها.",
     "endpoint": "نقطة النهاية",
     "documentation": "التوثيق"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

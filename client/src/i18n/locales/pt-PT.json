@@ -159,6 +159,8 @@
     "notGitInstall": "Esta instalação não inclui informações do commit.",
     "checkFailed": "Não foi possível procurar atualizações.",
     "contactsGithub": "As verificações são manuais e contactam o GitHub.",
+    "autoUpdateCheck": "Verificação automática de atualizações",
+    "autoUpdateCheckHelp": "Consulta o GitHub uma vez por dia à procura de uma nova versão e mostra um lembrete. Desativado por predefinição.",
     "openReleases": "Abrir lançamentos no GitHub",
     "restartAfterUpdate": "Reinicie o FreeLLMAPI após a conclusão da compilação."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Fornecedores",
     "checklistSummary": "{configured} de {total} fornecedores configurados",
     "checklistKeyless": "não requer chave",
+    "checklistNoKeyTip": "Ainda não foi adicionada nenhuma chave. Clique para adicionar uma.",
+    "checklistKeylessTip": "Funciona sem chave.",
     "tabQuotaSignals": "Sinais de quota",
     "tabApiKey": "Chave API unificada",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Criar perfil",
     "cpRotate": "Rodar chave",
     "cpKeyOnce": "Copie esta chave agora — não voltará a ser mostrada.",
-    "cpEnabledAria": "Perfil ativado"
+    "cpEnabledAria": "Perfil ativado",
+    "selectKey": "Selecionar esta chave",
+    "bulkSelected": "{count} selecionadas",
+    "bulkEnable": "Ativar todas",
+    "bulkDisable": "Desativar todas",
+    "bulkDelete": "Eliminar todas",
+    "bulkDeleteConfirm": "Eliminar {count}?",
+    "bulkResult": "Atualizadas {done}; falharam {failed}.",
+    "bulkDeleteResult": "Eliminadas {done}; falharam {failed}."
   },
   "status": {
     "healthy": "Saudável",
@@ -841,5 +853,14 @@
     "manualHint": "URL base e chave para introduzir nas definições da própria ferramenta.",
     "endpoint": "Endpoint",
     "documentation": "Documentação"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

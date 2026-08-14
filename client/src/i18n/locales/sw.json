@@ -159,6 +159,8 @@
     "notGitInstall": "Usakinishaji huu hauna taarifa za commit.",
     "checkFailed": "Imeshindikana kuangalia masasisho.",
     "contactsGithub": "Ukaguzi hufanywa mwenyewe na huwasiliana na GitHub.",
+    "autoUpdateCheck": "Ukaguzi wa masasisho otomatiki",
+    "autoUpdateCheckHelp": "Hukagua GitHub mara moja kwa siku kwa toleo jipya na kuonyesha ukumbusho. Imezimwa kwa chaguo-msingi.",
     "openReleases": "Fungua Matoleo ya GitHub",
     "restartAfterUpdate": "Anzisha upya FreeLLMAPI baada ya ujenzi kukamilika."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Watoa huduma",
     "checklistSummary": "Watoa huduma {configured} kati ya {total} wamesanidiwa",
     "checklistKeyless": "hakuna ufunguo unaohitajika",
+    "checklistNoKeyTip": "Bado hakuna ufunguo ulioongezwa. Bofya ili kuongeza.",
+    "checklistKeylessTip": "Hufanya kazi bila ufunguo.",
     "tabQuotaSignals": "Ishara za quota",
     "tabApiKey": "Kitufe cha umoja cha API",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Unda wasifu",
     "cpRotate": "Badilisha ufunguo",
     "cpKeyOnce": "Nakili ufunguo huu sasa — hautaonyeshwa tena.",
-    "cpEnabledAria": "Wasifu umewashwa"
+    "cpEnabledAria": "Wasifu umewashwa",
+    "selectKey": "Chagua ufunguo huu",
+    "bulkSelected": "{count} zimechaguliwa",
+    "bulkEnable": "Wezesha zote",
+    "bulkDisable": "Zima zote",
+    "bulkDelete": "Futa zote",
+    "bulkDeleteConfirm": "Futa {count}?",
+    "bulkResult": "Zimesasishwa {done}; zimeshindwa {failed}.",
+    "bulkDeleteResult": "Zimefutwa {done}; zimeshindwa {failed}."
   },
   "status": {
     "healthy": "afya",
@@ -841,5 +853,14 @@
     "manualHint": "URL msingi na ufunguo wa kuweka katika mipangilio ya zana yenyewe.",
     "endpoint": "Kituo cha mwisho",
     "documentation": "Nyaraka"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -159,6 +159,8 @@
     "notGitInstall": "ഈ ഇൻസ്റ്റാളേഷനിൽ കമ്മിറ്റ് വിവരങ്ങൾ ഉൾപ്പെട്ടിട്ടില്ല.",
     "checkFailed": "അപ്‌ഡേറ്റുകൾ പരിശോധിക്കാനായില്ല.",
     "contactsGithub": "പരിശോധനകൾ മാനുവലായാണ് നടത്തുന്നത്; അവ GitHub-മായി ബന്ധപ്പെടുന്നു.",
+    "autoUpdateCheck": "സ്വയമേവയുള്ള അപ്ഡേറ്റ് പരിശോധന",
+    "autoUpdateCheckHelp": "ദിവസത്തിൽ ഒരിക്കൽ പുതിയ റിലീസിനായി GitHub പരിശോധിച്ച് ഒരു ഓർമ്മപ്പെടുത്തൽ കാണിക്കുന്നു. സ്ഥിരസ്ഥിതിയായി ഓഫ് ആണ്.",
     "openReleases": "GitHub റിലീസുകൾ തുറക്കുക",
     "restartAfterUpdate": "ബിൽഡ് പൂർത്തിയായ ശേഷം FreeLLMAPI പുനരാരംഭിക്കുക."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "ദാതാക്കൾ",
     "checklistSummary": "{total}-ൽ {configured} ദാതാക്കൾ കോൺഫിഗർ ചെയ്തു",
     "checklistKeyless": "കീ ആവശ്യമില്ല",
+    "checklistNoKeyTip": "ഇതുവരെ കീ ചേർത്തിട്ടില്ല. ചേർക്കാൻ ക്ലിക്ക് ചെയ്യുക.",
+    "checklistKeylessTip": "കീ ഇല്ലാതെ പ്രവർത്തിക്കുന്നു.",
     "tabQuotaSignals": "ക്വാട്ട സിഗ്നലുകൾ",
     "tabApiKey": "ഏകീകൃത API കീ",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "പ്രൊഫൈൽ സൃഷ്ടിക്കുക",
     "cpRotate": "കീ മാറ്റുക",
     "cpKeyOnce": "ഈ കീ ഇപ്പോൾതന്നെ പകർത്തുക — ഇത് വീണ്ടും കാണിക്കില്ല.",
-    "cpEnabledAria": "പ്രൊഫൈൽ പ്രവർത്തനക്ഷമം"
+    "cpEnabledAria": "പ്രൊഫൈൽ പ്രവർത്തനക്ഷമം",
+    "selectKey": "ഈ കീ തിരഞ്ഞെടുക്കുക",
+    "bulkSelected": "{count} തിരഞ്ഞെടുത്തു",
+    "bulkEnable": "എല്ലാം പ്രവർത്തനക്ഷമമാക്കുക",
+    "bulkDisable": "എല്ലാം പ്രവർത്തനരഹിതമാക്കുക",
+    "bulkDelete": "എല്ലാം ഇല്ലാതാക്കുക",
+    "bulkDeleteConfirm": "{count} ഇല്ലാതാക്കണോ?",
+    "bulkResult": "{done} അപ്‌ഡേറ്റ് ചെയ്തു; {failed} പരാജയപ്പെട്ടു.",
+    "bulkDeleteResult": "{done} ഇല്ലാതാക്കി; {failed} പരാജയപ്പെട്ടു."
   },
   "status": {
     "healthy": "ആരോഗ്യമുള്ള",
@@ -841,5 +853,14 @@
     "manualHint": "ഉപകരണത്തിന്റെ സ്വന്തം ക്രമീകരണങ്ങളിൽ നൽകാനുള്ള ബേസ് URL ഉം കീയും.",
     "endpoint": "എൻഡ്‌പോയിൻ്റ്",
     "documentation": "ഡോക്യുമെൻ്റേഷൻ"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

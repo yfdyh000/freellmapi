@@ -36,12 +36,9 @@ jobs:
           - os: windows-2022
             ebArgs: --win --x64
             artifact: windows-installer
-            # NSIS installer + green zip (multi-file, unzip-and-run) + max-ratio
-            # .7z (lzma2) plus auto-update metadata (latest.yml / blockmap).
             glob: |
               desktop/dist-electron/*.exe
               desktop/dist-electron/*.zip
-              desktop/dist-electron/*.7z
               desktop/dist-electron/*.blockmap
               desktop/dist-electron/latest.yml
           - os: macos-latest
@@ -60,29 +57,17 @@ jobs:
               desktop/dist-electron/*.deb
               desktop/dist-electron/latest-linux.yml
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          # Cache the npm store (~/.npm, GLOBAL across both installs below —
-          # desktop/ is not a workspace but shares the same store). Omit
-          # cache-dependency-path so the key hashes only the root lockfile:
-          # desktop/package-lock.json churn would otherwise invalidate the
-          # root cache too, making it miss on every run.
-          cache: 'npm'
 
       - name: Install workspace dependencies
-        # npm ci: installs exactly from the lockfile (verified in sync) — faster
-        # than `npm install` (no tree re-resolution) and never mutates the
-        # lockfile, so the npm-store cache key stays stable across runs.
-        # --no-audit/--no-fund: CI release builds don't need the per-run
-        # network audit of 750+ packages (adds tens of seconds); run `npm
-        # audit` manually on a schedule instead.
-        run: npm ci --no-audit --no-fund
+        run: npm install
 
       - name: Install desktop dependencies
-        run: npm --prefix desktop ci --no-audit --no-fund
+        run: npm --prefix desktop install
 
       # The per-platform window chrome (#703's menu-bar fix) lives in a branch
       # that never executes on a developer's mac. These run on both matrix
@@ -188,27 +173,8 @@ jobs:
           # uploads. The "Attach installer to release" step below owns publishing.
           npx --no-install electron-builder ${{ matrix.ebArgs }} --publish never
 
-      # Windows-only: pack the green multi-file build with 7-Zip / LZMA2.
-      # Note: stock 7-Zip (what the runner ships) only DECODES Zstandard — the
-      # zstd encoder exists only in third-party builds — and brotli is absent
-      # from the codec list, so LZMA2 is the best available encoder. The Chromium
-      # binaries are already compressed, so -mx=7 gives virtually the same size
-      # as -mx=9 while being faster and using half the memory.
-      # The GitHub Windows runner ships 7-Zip in Program Files with 7z.exe.
-      - name: Compress green 7z (lzma2)
-        if: matrix.os == 'windows-2022'
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd desktop/dist-electron
-          VERSION=$(node -p "require('../package.json').version")
-          # Resolve the unpacked dir electron-builder just produced (win-unpacked).
-          OUT="FreeLLMAPI-${VERSION}-win-x64.7z"
-          "$(ls -d /c/Program\ Files/7-Zip/7z.exe 2>/dev/null | head -n1)" a \
-            -t7z -m0=lzma2 -mx=7 -mmt=on "$OUT" win-unpacked
-
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.glob }}
@@ -216,6 +182,6 @@ jobs:
 
       - name: Attach installer to release
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v2
         with:
           files: ${{ matrix.glob }}

@@ -159,6 +159,8 @@
     "notGitInstall": "Walang impormasyon ng commit ang installation na ito.",
     "checkFailed": "Hindi masuri kung may mga update.",
     "contactsGithub": "Manu-mano ang mga pagsusuri at kumokonekta ang mga ito sa GitHub.",
+    "autoUpdateCheck": "Awtomatikong pagsusuri ng update",
+    "autoUpdateCheckHelp": "Sinusuri ang GitHub minsan sa isang araw para sa bagong release at nagpapakita ng paalala. Naka-off bilang default.",
     "openReleases": "Buksan ang GitHub Releases",
     "restartAfterUpdate": "I-restart ang FreeLLMAPI kapag natapos ang build."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Mga Tagapagbigay",
     "checklistSummary": "{configured} sa {total} tagapagbigay ang naka-configure",
     "checklistKeyless": "hindi kailangan ng key",
+    "checklistNoKeyTip": "Wala pang key na naidagdag. I-click para magdagdag.",
+    "checklistKeylessTip": "Gumagana nang walang key.",
     "tabQuotaSignals": "Mga senyales ng quota",
     "tabApiKey": "Pinag-isang API key",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Gumawa ng profile",
     "cpRotate": "I-rotate ang key",
     "cpKeyOnce": "Kopyahin ang key na ito ngayon — hindi na ito ipapakita muli.",
-    "cpEnabledAria": "Naka-enable ang profile"
+    "cpEnabledAria": "Naka-enable ang profile",
+    "selectKey": "Piliin ang key na ito",
+    "bulkSelected": "{count} napili",
+    "bulkEnable": "Paganahin lahat",
+    "bulkDisable": "I-disable lahat",
+    "bulkDelete": "Tanggalin lahat",
+    "bulkDeleteConfirm": "Tanggalin ang {count}?",
+    "bulkResult": "Na-update {done}; nabigo {failed}.",
+    "bulkDeleteResult": "Natanggal {done}; nabigo {failed}."
   },
   "status": {
     "healthy": "malusog",
@@ -841,5 +853,14 @@
     "manualHint": "Base URL at key na ilalagay sa sariling settings ng tool.",
     "endpoint": "Endpoint",
     "documentation": "Dokumentasyon"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

@@ -159,6 +159,8 @@
     "notGitInstall": "Wannan shigarwar ba ta ƙunshi bayanan commit ba.",
     "checkFailed": "Ba a iya bincika sabuntawa ba.",
     "contactsGithub": "Ana yin dubawa da hannu kuma ana tuntuɓar GitHub.",
+    "autoUpdateCheck": "Duba sabuntawa ta atomatik",
+    "autoUpdateCheckHelp": "Yana duba GitHub sau ɗaya a rana don sabon fitowa kuma yana nuna tunatarwa. A kashe ta tsohuwa.",
     "openReleases": "Buɗe sakin GitHub",
     "restartAfterUpdate": "Sake kunna FreeLLMAPI bayan an gama build ɗin."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Masu bayarwa",
     "checklistSummary": "An saita {configured} daga cikin {total} masu bayarwa",
     "checklistKeyless": "ba a buƙatar maɓalli",
+    "checklistNoKeyTip": "Ba a ƙara maɓalli ba tukuna. Danna don ƙarawa.",
+    "checklistKeylessTip": "Yana aiki ba tare da maɓalli ba.",
     "tabQuotaSignals": "Alamun ƙididdiga",
     "tabApiKey": "Maɓallin API haɗe",
     "tabAnthropic": "Saukewa: Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Ƙirƙiri bayanin martaba",
     "cpRotate": "Canza maɓalli",
     "cpKeyOnce": "Kwafi wannan maɓallin yanzu — ba za a sake nuna shi ba.",
-    "cpEnabledAria": "An kunna bayanin martaba"
+    "cpEnabledAria": "An kunna bayanin martaba",
+    "selectKey": "Zaɓi wannan maɓalli",
+    "bulkSelected": "{count} zaɓaɓɓu",
+    "bulkEnable": "Kunna duka",
+    "bulkDisable": "Kashe duka",
+    "bulkDelete": "Share duka",
+    "bulkDeleteConfirm": "A share {count}?",
+    "bulkResult": "An sabunta {done}; ya kasa {failed}.",
+    "bulkDeleteResult": "An share {done}; ya kasa {failed}."
   },
   "status": {
     "healthy": "lafiya",
@@ -841,5 +853,14 @@
     "manualHint": "Babban URL da maɓalli don shigarwa cikin saitunan kayan aikin.",
     "endpoint": "Endpoint",
     "documentation": "Takardun bayani"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

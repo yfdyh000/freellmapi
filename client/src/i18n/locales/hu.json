@@ -159,6 +159,8 @@
     "notGitInstall": "Ez a telepítés nem tartalmaz commitinformációkat.",
     "checkFailed": "Nem sikerült ellenőrizni a frissítéseket.",
     "contactsGithub": "Az ellenőrzések manuálisak, és kapcsolatba lépnek a GitHubbal.",
+    "autoUpdateCheck": "Automatikus frissítésellenőrzés",
+    "autoUpdateCheckHelp": "Naponta egyszer ellenőrzi a GitHubon az új kiadást, és emlékeztetőt jelenít meg. Alapértelmezés szerint kikapcsolva.",
     "openReleases": "GitHub-kiadások megnyitása",
     "restartAfterUpdate": "A build befejezése után indítsa újra a FreeLLMAPI-t."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Szolgáltatók",
     "checklistSummary": "{total} szolgáltatóból {configured} beállítva",
     "checklistKeyless": "nem kell kulcs",
+    "checklistNoKeyTip": "Még nincs hozzáadva kulcs. Kattintson a hozzáadáshoz.",
+    "checklistKeylessTip": "Kulcs nélkül működik.",
     "tabQuotaSignals": "Kvótajelzések",
     "tabApiKey": "Egységes API kulcs",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Profil létrehozása",
     "cpRotate": "Kulcs cseréje",
     "cpKeyOnce": "Másolja ki most ezt a kulcsot — többé nem jelenik meg.",
-    "cpEnabledAria": "Profil engedélyezve"
+    "cpEnabledAria": "Profil engedélyezve",
+    "selectKey": "Válaszd ki ezt a kulcsot",
+    "bulkSelected": "{count} kiválasztva",
+    "bulkEnable": "Összes engedélyezése",
+    "bulkDisable": "Összes letiltása",
+    "bulkDelete": "Összes törlése",
+    "bulkDeleteConfirm": "{count} törlése?",
+    "bulkResult": "Frissítve {done}; {failed} sikertelen.",
+    "bulkDeleteResult": "Törölve {done}; {failed} sikertelen."
   },
   "status": {
     "healthy": "egészséges",
@@ -841,5 +853,14 @@
     "manualHint": "Alap-URL és kulcs az eszköz saját beállításaihoz.",
     "endpoint": "Végpont",
     "documentation": "Dokumentáció"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

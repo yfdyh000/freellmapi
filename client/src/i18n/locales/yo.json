@@ -159,6 +159,8 @@
     "notGitInstall": "Fífìmọ́lẹ̀ yìí kò ní àlàyé commit.",
     "checkFailed": "A kò lè ṣàyẹ̀wò àwọn ìmúdójúìwọ̀n.",
     "contactsGithub": "Ọwọ́ ni a fi ń ṣe àwọn àyẹ̀wò, wọ́n sì ń kan sí GitHub.",
+    "autoUpdateCheck": "Àyẹ̀wò ìmúdójúìwọ̀n aládàáṣe",
+    "autoUpdateCheckHelp": "Ó ń ṣàyẹ̀wò GitHub lẹ́ẹ̀kan lóòjọ́ fún ìtújáde tuntun, ó sì ń fi ìránnilétí hàn. Ó pa ní àtìbẹ̀rẹ̀.",
     "openReleases": "Ṣí àwọn ìtújáde GitHub",
     "restartAfterUpdate": "Tun FreeLLMAPI bẹ̀rẹ̀ lẹ́yìn tí ìkọ́lé bá parí."
   },
@@ -317,6 +319,8 @@
     "tabProviders": "Awọn olupese",
     "checklistSummary": "A ti ṣètò {configured} nínú {total} olùpèsè",
     "checklistKeyless": "kò nílò kọ́kọ́rọ́",
+    "checklistNoKeyTip": "Kò sí kọ́kọ́rọ́ tí a ti fi kún un. Tẹ̀ láti fi kọ́kọ́rọ́ kún un.",
+    "checklistKeylessTip": "Ó ń ṣiṣẹ́ láìsí kọ́kọ́rọ́.",
     "tabQuotaSignals": "Quota awọn ifihan agbara",
     "tabApiKey": "Bọtini API ti iṣọkan",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "Ṣẹ̀dá pírófáìlì",
     "cpRotate": "Yí kọ́kọ́rọ́ padà",
     "cpKeyOnce": "Ṣàdàkọ kọ́kọ́rọ́ yìí báyìí — a kò ní fi hàn mọ́.",
-    "cpEnabledAria": "Pírófáìlì ti ṣiṣẹ́"
+    "cpEnabledAria": "Pírófáìlì ti ṣiṣẹ́",
+    "selectKey": "Yan bọtini yii",
+    "bulkSelected": "{count} ti yan",
+    "bulkEnable": "Mu gbogbo rẹ ṣiṣẹ",
+    "bulkDisable": "Pa gbogbo rẹ",
+    "bulkDelete": "Paarẹ gbogbo rẹ",
+    "bulkDeleteConfirm": "Paarẹ {count}?",
+    "bulkResult": "Ṣe imudojuiwọn {done}; kuna {failed}.",
+    "bulkDeleteResult": "Paarẹ {done}; kuna {failed}."
   },
   "status": {
     "healthy": "ni ilera",
@@ -841,5 +853,14 @@
     "manualHint": "URL ìpìlẹ̀ àti kọ́kọ́rọ́ láti tẹ̀ sínú ètò irinṣẹ́ náà.",
     "endpoint": "Ebute",
     "documentation": "Iwe akọsilẹ"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }

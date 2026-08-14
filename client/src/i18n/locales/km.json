@@ -159,6 +159,8 @@
     "notGitInstall": "ការដំឡើងនេះមិនមានព័ត៌មាន commit ទេ។",
     "checkFailed": "មិនអាចពិនិត្យរកការអាប់ដេតបានទេ។",
     "contactsGithub": "ការពិនិត្យធ្វើឡើងដោយដៃ និងភ្ជាប់ទៅ GitHub។",
+    "autoUpdateCheck": "ការពិនិត្យអាប់ដេតដោយស្វ័យប្រវត្តិ",
+    "autoUpdateCheckHelp": "ពិនិត្យ GitHub ម្ដងក្នុងមួយថ្ងៃរកមើលការចេញផ្សាយថ្មី ហើយបង្ហាញការរំលឹក។ បិទតាមលំនាំដើម។",
     "openReleases": "បើក GitHub Releases",
     "restartAfterUpdate": "ចាប់ផ្តើម FreeLLMAPI ឡើងវិញ បន្ទាប់ពីការបង្កើតបានបញ្ចប់។"
   },
@@ -317,6 +319,8 @@
     "tabProviders": "អ្នកផ្តល់សេវា",
     "checklistSummary": "បានកំណត់រចនាសម្ព័ន្ធអ្នកផ្តល់សេវា {configured} ក្នុងចំណោម {total}",
     "checklistKeyless": "មិនត្រូវការសោ",
+    "checklistNoKeyTip": "មិនទាន់បានបន្ថែមសោនៅឡើយទេ។ ចុចដើម្បីបន្ថែម។",
+    "checklistKeylessTip": "ដំណើរការដោយមិនចាំបាច់ប្រើសោ។",
     "tabQuotaSignals": "សញ្ញាកូតា",
     "tabApiKey": "កូនសោ API រួម",
     "tabAnthropic": "Anthropic",
@@ -517,7 +521,15 @@
     "cpCreate": "បង្កើតប្រវត្តិរូប",
     "cpRotate": "ប្ដូរសោ",
     "cpKeyOnce": "ចម្លងសោនេះឥឡូវនេះ — វានឹងមិនបង្ហាញម្ដងទៀតទេ។",
-    "cpEnabledAria": "ប្រវត្តិរូបបានបើក"
+    "cpEnabledAria": "ប្រវត្តិរូបបានបើក",
+    "selectKey": "ជ្រើសរើសកូនសោនេះ",
+    "bulkSelected": "បានជ្រើសរើស {count}",
+    "bulkEnable": "បើកទាំងអស់",
+    "bulkDisable": "បិទទាំងអស់",
+    "bulkDelete": "លុបទាំងអស់",
+    "bulkDeleteConfirm": "លុប {count}?",
+    "bulkResult": "បានធ្វើបច្ចុប្បន្នភាព {done}; បរាជ័យ {failed}។",
+    "bulkDeleteResult": "បានលុប {done}; បរាជ័យ {failed}។"
   },
   "status": {
     "healthy": "មានសុខភាពល្អ",
@@ -841,5 +853,14 @@
     "manualHint": "URL មូលដ្ឋាន និងកូនសោសម្រាប់បញ្ចូលក្នុងការកំណត់របស់ឧបករណ៍។",
     "endpoint": "ចំណុចបញ្ចប់",
     "documentation": "ឯកសារ"
+  },
+  "update": {
+    "available": "New version available",
+    "whatsNew": "What's new in v{version}",
+    "publishedOn": "Published {date}",
+    "noNotes": "No release notes were published for this version.",
+    "openRelease": "Open release page",
+    "dismissVersion": "Dismiss this version",
+    "dismiss": "Dismiss"
   }
 }
