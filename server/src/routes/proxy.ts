@@ -6,11 +6,11 @@ import type { ChatMessage, ChatToolCall, ModelListRow, TokenUsage } from '@freel
 import { routeRequest, resolveRoutingChain, resolveModelGroupCandidates, resolveStickyPreference, recordRateLimitHit, recordSuccess, hasEnabledVisionModel, hasEnabledToolsModel, hasOtherUsableKey, routingReserveTokens, type RouteResult, type ResolvedChain, type ChainRow } from '../services/router.js';
 import { recordRequest, recordTokens, setCooldown, getCooldownDurationForLimit, PAYMENT_REQUIRED_COOLDOWN_MS, MODEL_FORBIDDEN_COOLDOWN_MS, learnLimitFromError } from '../services/ratelimit.js';
 import { runEmbeddings, EmbeddingsError } from '../services/embeddings.js';
-import { runImageGeneration, runSpeech, runTranscription, MediaError, MAX_TRANSCRIPTION_BYTES } from '../services/media.js';
+import { runImageGeneration, runVideoGeneration, runSpeech, runTranscription, MediaError, MAX_TRANSCRIPTION_BYTES } from '../services/media.js';
 import multer from 'multer';
 import { getDb } from '../db/index.js';
 import { resolveAuth, prependSystemPrompt, type ResolvedAuth } from '../lib/system-prompt.js';
-import { contentToString, messageHasImage, normalizeOutboundContent, sanitizeResponse } from '../lib/content.js';
+import { contentToString, messageHasImage, normalizeOutboundContent, sanitizeResponse, truncateMessagesForGithub } from '../lib/content.js';
 import { normalizeMessageImages } from '../lib/image-normalize.js';
 import { repairToolArguments, toolSchemaMap } from '../lib/tool-args.js';
 import { invalidToolArgumentsError, invalidToolCallReasons, isToolArgumentValidationEnabled } from '../lib/tool-validate.js';
@@ -31,6 +31,7 @@ import type { Platform } from '@freellmapi/shared/types.js';
 import { inferQuotaPoolKey, type QuotaObservationContext } from '../services/provider-quota.js';
 import { isUnifyEnabled, getModelGroups, resolveRequestedIdForDispatch } from '../services/model-groups.js';
 import { buildModelListing } from '../services/model-listing.js';
+import { claudeFamilyDiscoveryEntries } from '../services/anthropic-map.js';
 import { compressRequest, formatCompressionHeader } from '../services/compression/pipeline.js';
 
 export const proxyRouter = Router();
@@ -310,6 +311,59 @@ proxyRouter.get('/models', (req: Request, res: Response) => {
   const onlyAvailable = q === '1' || q === 'true' || q === 'yes';
   const listed = onlyAvailable ? allListed.filter(m => m.available === 1) : allListed;
 
+  // Named fallback chains (#960/#895): every user-defined profile is exposed
+  // as an `auto:<name>` model so a client can pick a specific fallback chain
+  // per request (auto:my-group) instead of only the active one. Available iff
+  // at least one model in that profile's chain can serve a request right now.
+  const profileRows = getDb().prepare(`
+    SELECT p.id, p.name,
+           EXISTS (
+             SELECT 1
+             FROM profile_models pm
+             JOIN models m ON m.id = pm.model_db_id AND m.enabled = 1
+             WHERE pm.profile_id = p.id AND pm.enabled = 1
+               AND EXISTS (
+                 SELECT 1 FROM api_keys k
+                 WHERE k.platform = m.platform AND k.enabled = 1
+                   AND (m.key_id IS NULL OR k.id = m.key_id)
+               )
+           ) AS usable,
+           (SELECT MAX(m2.context_window)
+            FROM profile_models pm2
+            JOIN models m2 ON m2.id = pm2.model_db_id AND m2.enabled = 1
+            WHERE pm2.profile_id = p.id AND pm2.enabled = 1) AS max_ctx
+    FROM profiles p
+    WHERE p.type = 'custom'
+    ORDER BY p.sort_order, p.id
+  `).all() as { id: number; name: string; usable: number; max_ctx: number | null }[];
+
+  // Claude-family discovery entries (#880). The Anthropic-shaped GET /v1/models
+  // in routes/anthropic.ts already lists one id per Claude family so clients
+  // that only accept Claude-looking ids can discover anything at all — but that
+  // handler only answers when the caller sends an `anthropic-version` header.
+  // Claude Desktop's gateway picker fetches this path WITHOUT that header, so
+  // it fell through to the OpenAI-shaped listing below and still saw zero
+  // Claude-shaped ids. Emit the same entries here, from the same builder, so
+  // both shapes agree on what the gateway will serve. Listed only when
+  // something can actually serve them, and never when the id would collide
+  // with a real catalog row.
+  const listedIds = new Set(listed.map(m => m.id));
+  const claudeFamilyEntries = allListed.some(m => m.available === 1)
+    ? claudeFamilyDiscoveryEntries()
+      .filter(a => !listedIds.has(a.id))
+      .map(a => ({
+        id: a.id,
+        object: 'model' as const,
+        created: 0,
+        owned_by: 'freellmapi',
+        name: a.displayName,
+        context_window: autoContextWindow,
+        context_length: autoContextWindow,
+        available: true,
+        unavailable_reason: null,
+      }))
+    : [];
+
   res.json({
     object: 'list',
     data: [
@@ -339,6 +393,18 @@ proxyRouter.get('/models', (req: Request, res: Response) => {
         available: autoContextWindow != null,
         unavailable_reason: autoContextWindow != null ? null : 'no_models',
       },
+      ...claudeFamilyEntries,
+      ...profileRows.map(p => ({
+        id: `auto:${p.name.toLowerCase()}`,
+        object: 'model',
+        created: 0,
+        owned_by: 'freellmapi',
+        name: `Auto: ${p.name} (named fallback chain)`,
+        context_window: p.max_ctx,
+        context_length: p.max_ctx,
+        available: p.usable === 1,
+        unavailable_reason: p.usable === 1 ? null : 'no_models',
+      })),
       ...listed.map(m => ({
         id: m.id,
         object: 'model',
@@ -629,6 +695,65 @@ proxyRouter.post('/images/generations', async (req: Request, res: Response) => {
   }
 });
 
+// Text-to-video generation. Providers may use a synchronous binary response
+// (Pollinations) or an asynchronous queue internally (Hugging Face/fal.ai), but
+// this gateway presents one bounded request and returns the completed MP4.
+const VideoBody = z.object({
+  model: z.string().optional(),
+  prompt: z.string().min(1),
+  duration: z.number().int().min(1).max(120).optional(),
+  aspect_ratio: z.enum(['16:9', '9:16']).optional(),
+  image: z.string().url().optional(),
+  seed: z.number().int().min(-1).max(2_147_483_647).optional(),
+  audio: z.boolean().optional(),
+});
+
+proxyRouter.post('/videos/generations', async (req: Request, res: Response) => {
+  if (!requireInferenceAuth(req, res)) return;
+  const parsed = VideoBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({
+      error: {
+        message: 'Invalid request: `prompt` is required and video options must use supported values',
+        type: 'invalid_request_error',
+      },
+    });
+    return;
+  }
+  // A video job runs for minutes, so a caller that hangs up must actually stop
+  // the work: without this the gateway would keep polling the provider and then
+  // fail over to a second one, both charged to the operator, for a response
+  // nobody is waiting for. 'close' also fires on normal completion, which
+  // writableEnded distinguishes.
+  const clientAbort = new AbortController();
+  res.on('close', () => {
+    if (!res.writableEnded) clientAbort.abort();
+  });
+  try {
+    const result = await runVideoGeneration(parsed.data.model, {
+      prompt: parsed.data.prompt,
+      duration: parsed.data.duration,
+      aspectRatio: parsed.data.aspect_ratio,
+      image: parsed.data.image,
+      seed: parsed.data.seed,
+      audio: parsed.data.audio,
+    }, clientAbort.signal);
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Provider', safeHeaderValue(result.platform));
+    res.setHeader('X-Model', safeHeaderValue(result.modelId));
+    res.send(result.video);
+  } catch (err: any) {
+    // Nothing to report to a socket that is already gone.
+    if (clientAbort.signal.aborted || res.writableEnded) return;
+    const status = err instanceof MediaError ? err.status : 502;
+    const httpStatus = status >= 400 && status < 600 ? status : 502;
+    res.status(httpStatus).json({
+      error: { message: `video generation error: ${err?.message ?? 'unknown'}`, type: mediaErrorType(status) },
+    });
+  }
+});
+
 // OpenAI-compatible text-to-speech. Returns raw audio bytes (OpenAI's /audio/speech
 // shape). Same media-catalog routing as images.
 const SpeechBody = z.object({
@@ -664,9 +789,10 @@ proxyRouter.post('/audio/speech', async (req: Request, res: Response) => {
 // disk), routed through the STT provider chain in services/media.ts with the
 // same key/failover/cooldown machinery as the other media endpoints. The STT
 // registry (media_models, modality='transcription') is maintained by the
-// published catalog's `transcriptionModels` array via catalog-sync; on an
-// install that has never synced one, the endpoint answers 503 with code
-// 'no_transcription_models' until the first sync lands.
+// published catalog's `transcriptionModels` array via catalog-sync, plus any
+// OpenAI-compatible endpoint the operator registered themselves through
+// POST /api/media/custom; on an install that has never synced one and has no
+// custom row, the endpoint answers 503 with code 'no_transcription_models'.
 //
 // response_format: 'json' (default, {"text": ...}), 'text' (plain string),
 // 'verbose_json' (OpenAI verbose shape when the provider returns segments,
@@ -878,8 +1004,11 @@ proxyRouter.post('/completions', async (req: Request, res: Response) => {
   const messages = prependSystemPrompt(completionPromptToMessages(prompt, suffix), auth.systemPrompt);
   const estimatedInputTokens = messages.reduce((sum, m) => sum + Math.ceil(contentToString(m.content).length / 4), 0);
   // Cap the reserved output so a huge client-set max_tokens doesn't falsely
-  // exclude the whole model pool (#470); input is still counted in full.
-  const estimatedTotal = estimatedInputTokens + routingReserveTokens(max_tokens);
+  // exclude the whole model pool (#470); input is still counted in full. The
+  // reserve is passed to the router separately: it is an exact count and must
+  // not be inflated by the context-window safety margin (#956 review).
+  const outputReserve = routingReserveTokens(max_tokens);
+  const estimatedTotal = estimatedInputTokens + outputReserve;
 
   // Guardrail: per-request token budget (request_max_tokens_budget, default
   // off). max_tokens always has a value on this surface (default 128), so a
@@ -991,6 +1120,7 @@ proxyRouter.post('/completions', async (req: Request, res: Response) => {
       groupChain ?? resolvedChain?.chain,
       false,
       state.skipPlatforms.size > 0 ? state.skipPlatforms : undefined,
+      outputReserve,
     ),
     dispatch: async (route, attempt, ctx) => {
       traceRouteEvent('Proxy', {
@@ -1001,6 +1131,12 @@ proxyRouter.post('/completions', async (req: Request, res: Response) => {
         model: route.modelId,
         requestedModel: attempt === 0 ? requestedModelLabel : undefined,
       });
+
+      // Same GitHub input ceiling as /chat/completions below: trim the
+      // dispatched copy so a long legacy prompt doesn't 413 the github hop.
+      const dispatchMessages = route.platform === 'github'
+        ? truncateMessagesForGithub(messages)
+        : messages;
 
       if (stream) {
         let totalOutputTokens = 0;
@@ -1032,7 +1168,7 @@ proxyRouter.post('/completions', async (req: Request, res: Response) => {
         try {
           const gen = route.provider.streamChatCompletion(
             route.apiKey,
-            messages,
+            dispatchMessages,
             route.modelId,
             { temperature, max_tokens, top_p, stop, signal: AbortSignal.any([clientAbort.signal, hedgeAbort.signal]) },
             quotaContextForRoute(route, 'chat/completions'),
@@ -1132,7 +1268,7 @@ proxyRouter.post('/completions', async (req: Request, res: Response) => {
 
       const result = await route.provider.chatCompletion(
         route.apiKey,
-        messages,
+        dispatchMessages,
         route.modelId,
         { temperature, max_tokens, top_p, stop, signal: AbortSignal.any([clientAbort.signal, hedgeAbort.signal]) },
         quotaContextForRoute(route, 'chat/completions'),
@@ -1442,8 +1578,11 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
   const imageCount = messages.reduce((n, m) =>
     n + (Array.isArray(m.content) ? m.content.filter(b => (b as { type?: string })?.type === 'image_url' || (b as { type?: string })?.type === 'image').length : 0), 0);
   // The reserved output is capped (routingReserveTokens, #470) so an oversized
-  // client max_tokens can't starve routing; input + images count in full.
-  const estimatedTotal = estimatedInputTokens + imageCount * IMAGE_TOKEN_ESTIMATE + routingReserveTokens(max_tokens);
+  // client max_tokens can't starve routing; input + images count in full. The
+  // reserve is threaded to the router separately: it is exact and must not be
+  // inflated by the context-window safety margin (#956 review).
+  const outputReserve = routingReserveTokens(max_tokens);
+  const estimatedTotal = estimatedInputTokens + imageCount * IMAGE_TOKEN_ESTIMATE + outputReserve;
 
   // Tool-bearing requests must route to a model that emits STRUCTURED
   // tool_calls. A model without real function-calling support serializes the
@@ -1481,13 +1620,9 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
   // in parallel, then a judge synthesizes one answer. It routes each panel/judge
   // sub-call through the normal path (cooldowns, quotas, analytics), so it
   // behaves like a normal model from the client's side — just K+1x the tokens.
-  // Vision is still rejected up front; tool requests run on tool-capable panel
-  // members and return the first structured tool call directly.
+  // Image requests run on vision-capable panel members; tool requests run on
+  // tool-capable members and return the first structured tool call directly.
   if (isFusionModel(requestedModel)) {
-    if (hasImage) {
-      res.status(422).json({ error: { message: 'Fusion does not support image input yet. Use a vision model directly.', type: 'invalid_request_error', code: 'fusion_no_vision' } });
-      return;
-    }
     const fusionOptions = { temperature, max_tokens, top_p, stop, tools, tool_choice, parallel_tool_calls, ...samplingParams };
     const fusionConfig = parsed.data.fusion ?? {};
 
@@ -1511,6 +1646,7 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
           config: fusionConfig,
           options: fusionOptions,
           estimatedTokens: estimatedTotal,
+          vision: hasImage,
           hooks: {
             // `a` already carries a sanitized error for failed slots; content is
             // the model's own answer and is forwarded as-is.
@@ -1564,6 +1700,7 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
         config: fusionConfig,
         options: fusionOptions,
         estimatedTokens: estimatedTotal,
+        vision: hasImage,
       });
       // Structured-output enforcement for fusion (#516 scope gap): the panel/
       // judge output got no format check, so model:"fusion" could hand back
@@ -1810,7 +1947,7 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
       // model is on record). Turns where injection can't happen — every turn 1, and
       // sessions that never switched — pay no headroom tax.
       const routingEstimate = handoffPossible ? estimatedTotal + HANDOFF_MAX_TOKENS : estimatedTotal;
-      return routeRequest(routingEstimate, state.skipKeys.size > 0 ? state.skipKeys : undefined, preferredModel, hasImage, wantsTools, state.skipModels.size > 0 ? state.skipModels : undefined, groupChain ?? resolvedChain?.chain, samplingParams.response_format !== undefined, state.skipPlatforms.size > 0 ? state.skipPlatforms : undefined);
+      return routeRequest(routingEstimate, state.skipKeys.size > 0 ? state.skipKeys : undefined, preferredModel, hasImage, wantsTools, state.skipModels.size > 0 ? state.skipModels : undefined, groupChain ?? resolvedChain?.chain, samplingParams.response_format !== undefined, state.skipPlatforms.size > 0 ? state.skipPlatforms : undefined, outputReserve);
     },
     dispatch: async (route, attempt, ctx) => {
     const modelKey = `${route.platform}:${route.modelId}`;
@@ -1846,6 +1983,16 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
     const rememberedReasoning = rememberedReasoningFor(reasoningSessionKey, modelKey);
     if (rememberedReasoning) {
       outboundMessages = restoreSessionReasoning(outboundMessages, rememberedReasoning, route.platform);
+    }
+
+    // GitHub Models 413s a history above its input ceiling instead of
+    // truncating it, so a long conversation burns the github hop of every
+    // chain it appears in. Trim the outbound copy to what the platform will
+    // accept — scoped to this attempt, so the next candidate still sees the
+    // client's full history. A no-op returning the same array when the
+    // request already fits.
+    if (route.platform === 'github') {
+      outboundMessages = truncateMessagesForGithub(outboundMessages);
     }
 
       if (stream) {
@@ -1957,13 +2104,20 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
 
             if (anyChunk.id) lastMeta = { id: anyChunk.id, model: anyChunk.model, created: anyChunk.created };
 
+            // Usage arrives either on its own frame (OpenAI's
+            // stream_options.include_usage shape) or bundled onto the last
+            // choice-bearing frame — several providers do the latter, and
+            // reading it only off choice-less frames threw their real token
+            // counts away and left accounting on the chars/4 estimate. Capture
+            // it wherever it lands, reduced to a usage-only frame: the frame's
+            // deltas are re-emitted through our own framing below, so holding
+            // the original verbatim would duplicate content (or a finish_reason
+            // the client already saw) when it is written back after our finish
+            // chunk to preserve OpenAI ordering.
+            if (anyChunk.usage) usageChunk = { ...anyChunk, choices: [], usage: anyChunk.usage };
+
             const choice = anyChunk.choices?.[0];
-            if (!choice) {
-              // Usage-only frame (stream_options.include_usage) — held and
-              // re-emitted after our finish chunk to preserve OpenAI ordering.
-              if (anyChunk.usage) usageChunk = anyChunk;
-              continue;
-            }
+            if (!choice) continue;
 
             if (choice.finish_reason) upstreamFinish = choice.finish_reason;
 
@@ -2006,7 +2160,9 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
               // #764: thinking-only chunks still consumed tokens — count them.
               if (reasoning.length > 0) totalOutputTokens += Math.ceil(reasoning.length / 4);
               if (choice.delta && Object.keys(choice.delta).some(k => k !== 'content' && k !== 'tool_calls' && choice.delta[k] != null)) {
-                const cleaned = { ...anyChunk, choices: [{ ...choice, delta: { ...choice.delta, tool_calls: undefined }, finish_reason: null }] };
+                // `usage: undefined` (dropped by JSON.stringify): it was held
+                // above and is re-emitted once, after our finish chunk.
+                const cleaned = { ...anyChunk, usage: undefined, choices: [{ ...choice, delta: { ...choice.delta, tool_calls: undefined }, finish_reason: null }] };
                 if (headerSent) writeChunk(cleaned); else preamble.push(cleaned);
               }
               continue;
@@ -2018,7 +2174,9 @@ proxyRouter.post('/chat/completions', async (req: Request, res: Response) => {
             totalOutputTokens += Math.ceil((text.length + reasoning.length) / 4);
 
             if (mode === 'passthrough') {
-              writeChunk({ ...anyChunk, choices: [{ ...choice, delta: { ...choice.delta, tool_calls: undefined }, finish_reason: null }] });
+              // Same rule as the preamble path: usage rides the held frame,
+              // not this one, so the client sees it exactly once and last.
+              writeChunk({ ...anyChunk, usage: undefined, choices: [{ ...choice, delta: { ...choice.delta, tool_calls: undefined }, finish_reason: null }] });
               continue;
             }
 

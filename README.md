@@ -49,6 +49,7 @@ Your router updates its own model catalog from a signed feed: new free models, q
 - [Using the API](#using-the-api)
 - [Screenshots](#screenshots)
 - [How it works](#how-it-works)
+- [FAQ](#faq)
 - [Limitations](#limitations)
 - [Contributing](#contributing)
 - [Disclaimer](#disclaimer)
@@ -125,6 +126,7 @@ The full, always-current list lives at **[freellmapi.co/models](https://freellma
 <td align="center"><img src="repo-assets/agents/cursor.png" width="44" alt="Cursor"><br/><b>Cursor</b></td>
 <td align="center"><img src="repo-assets/agents/zed.png" width="44" alt="Zed"><br/><b>Zed</b></td>
 <td align="center"><img src="repo-assets/agents/jetbrains.png" width="44" alt="JetBrains AI"><br/><b>JetBrains AI</b></td>
+<td align="center"><img src="repo-assets/agents/deepseek-harness.png" width="44" alt="DeepSeek Harness"><br/><b>DeepSeek Harness</b></td>
 </tr>
 </table>
 
@@ -132,7 +134,7 @@ The full, always-current list lives at **[freellmapi.co/models](https://freellma
 
 </div>
 
-Most of these configure themselves with one command — `npx freellmapi setup-claude`, `setup-codex`, `setup-aider`, and ten more generators that fetch your live catalog, back up existing config, and never clobber what's already there. Claude Code and Codex also get zero-persistence launchers (`freellmapi launch`, `freellmapi launch-codex`) that inject credentials into the child process only. Zed and JetBrains AI connect through the opt-in [Ollama emulation](docs/clients.md#ollama-clients); Gemini CLI speaks its native wire on `/v1beta`.
+Most of these configure themselves with one command — `npx freellmapi setup-claude`, `setup-codex`, `setup-aider`, `setup-dsh` (DeepSeek Harness), and ten more generators that fetch your live catalog, back up existing config, and never clobber what's already there. Claude Code and Codex also get zero-persistence launchers (`freellmapi launch`, `freellmapi launch-codex`) that inject credentials into the child process only. Zed and JetBrains AI connect through the opt-in [Ollama emulation](docs/clients.md#ollama-clients); Gemini CLI speaks its native wire on `/v1beta`.
 
 Per-tool recipes, the setup CLI reference, revocable URL tokens for headerless clients, and the MCP server all live in **[Clients & coding agents →](docs/clients.md)**
 
@@ -146,11 +148,11 @@ Based on public documentation, July 2026 — corrections welcome.
 
 ![Feature overview](repo-assets/features.png)
 
-- **Every OpenAI surface** — `/v1/chat/completions`, `/v1/responses` (what Codex CLI needs), `/v1/completions` (editor ghost-text autocomplete), `/v1/images/generations`, `/v1/audio/speech`, `/v1/embeddings`, and `/v1/models` — streaming and non-streaming, from the official SDKs or any OpenAI-compatible client. [API reference →](docs/api.md)
+- **Every OpenAI-style surface** — `/v1/chat/completions`, `/v1/responses` (what Codex CLI needs), `/v1/completions` (editor ghost-text autocomplete), `/v1/images/generations`, `/v1/videos/generations`, `/v1/audio/speech`, `/v1/embeddings`, and `/v1/models` — streaming and non-streaming, from the official SDKs or any OpenAI-compatible client. [API reference →](docs/api.md)
 - **Anthropic Messages API** — `/v1/messages` speaks Anthropic's wire format over the same router, so **Claude Code** and the official Anthropic SDKs run against your free pool. [Details →](docs/api.md#anthropic--claude-clients)
 - **Native Gemini + Ollama surfaces** — Gemini CLI can use `/v1beta` (`generateContent`, streaming, token counting, models), while opt-in Ollama emulation serves NDJSON chat/generate, tags, metadata, and embeddings for Zed, JetBrains, and other local-model clients.
 - **Fusion (multi-model synthesis)** — request the virtual `fusion` model and the router fans your prompt out to a panel of diverse free models in parallel, then a judge model synthesizes one answer from the drafts. [Details →](docs/api.md#fusion-multi-model-synthesis)
-- **Image generation & text-to-speech** — `/v1/images/generations` and `/v1/audio/speech` route across the providers that serve media models, including custom OpenAI-compatible media endpoints.
+- **Image, video & speech generation** — `/v1/images/generations`, `/v1/videos/generations`, and `/v1/audio/speech` route across the providers that serve media models; images and speech also accept custom OpenAI-compatible media endpoints. Video jobs are normalized across synchronous and queued providers and return a completed MP4.
 - **Tool calling & structured outputs** — OpenAI-style `tools` round-trip across providers (plain-text tool calls are rescued into real `tool_calls`), plus `response_format`, `seed`, `logprobs`, penalties, and the rest of the sampling params passed through per provider.
 - **Smart routing, six strategies** — live per-model speed/capability/reliability scores rank your chain; automatic fallover retries the next model on 429/5xx with cooldowns and key rotation. [Routing in detail →](docs/architecture.md#routing-in-detail)
 - **Unified models & profiles** — the same model on several providers collapses into one entry with strict in-group failover; named fallback-chain profiles (a coding chain, a vision chain) switch from the dashboard or per request via `auto:<profile>`.
@@ -213,6 +215,8 @@ Every generator supports `--dry-run`, creates a timestamped backup before changi
 | Goose | `setup-goose` | `/v1` |
 | Qwen Code | `setup-qwen` | `/v1` (or native `/v1beta`) |
 | Roo / Kilo / Crush | `setup-roo` / `setup-kilo` / `setup-crush` | `/v1` |
+| DeepSeek Harness | `setup-dsh` | `/v1` |
+| MiMo Code | `setup-mimo` | `/v1` |
 | Cursor | `setup-cursor` guide | public `/v1` URL |
 
 FreeLLMAPI is local-first and single-user by design. Your provider keys stay in your SQLite database, encrypted at rest, and requests go from your machine to the upstream providers you enabled.
@@ -323,6 +327,18 @@ Request volume, success rate, tokens in and out, average latency, and per-provid
 
 One request in, the best free model out: the router picks the highest-priority model with a healthy key that's under all its rate limits, decrypts the key in memory, and calls the provider — on a 429/5xx it cools that key down and retries the next model in your chain. The component walkthrough, routing internals, and operational details live in **[docs/architecture.md](docs/architecture.md)**.
 
+## FAQ
+
+**Do I need a password?** Not for the desktop app — the dashboard signs itself in with a hidden local account, so there is nothing to set up and nothing to forget. Open it from the tray icon → **Open Dashboard**. Server installs (Docker, one-liner, `npm run dev`) do have an email + password account.
+
+**I forgot the password on a server install.** Click **Forgot password?** on the login page. There is no email to send a link to, so the one-time code is printed to the server log — read it with `docker compose logs -f freellmapi` (or in the terminal running the server, or in the desktop log file), then enter it on the reset form. The code lasts 15 minutes.
+
+**Where are the logs?** In the container log for Docker, in the terminal for a source run, and in `<data dir>/logs/freeapi.log` for the desktop app — reachable from the tray menu's **Open Logs Folder**.
+
+**How do I uninstall?** Remove the app (Trash on macOS, *Settings → Apps* on Windows, `docker compose down -v` for Docker), then delete the data directory: `%APPDATA%\FreeLLMAPI\`, `~/Library/Application Support/FreeLLMAPI/`, or `~/.config/FreeLLMAPI/`. Uninstalling never touches that folder on its own.
+
+Longer answers, per install method: **[docs/install.md#faq-passwords-logs-uninstall](docs/install.md#faq-passwords-logs-uninstall)**.
+
 ## Limitations
 
 Stacking free tiers has real trade-offs: no frontier models, variable latency, no SLA — and the effective intelligence of the endpoint dips late in the day as top models hit their daily caps, then resets at UTC midnight. Read the honest list in **[docs/architecture.md#limitations](docs/architecture.md#limitations)** before building anything real on this.
@@ -346,6 +362,8 @@ Contributors very welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the dev lo
 <a href="https://github.com/VinhPhamAI"><img src="https://images.weserv.nl/?url=github.com/VinhPhamAI.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@VinhPhamAI" /></a>
 <a href="https://github.com/deadc"><img src="https://images.weserv.nl/?url=github.com/deadc.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@deadc" /></a>
 <a href="https://github.com/zhangyu1324"><img src="https://images.weserv.nl/?url=github.com/zhangyu1324.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@zhangyu1324" /></a>
+<a href="https://github.com/kentpan"><img src="https://images.weserv.nl/?url=github.com/kentpan.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@kentpan" /></a>
+<a href="https://github.com/stephenzwj"><img src="https://images.weserv.nl/?url=github.com/stephenzwj.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@stephenzwj" /></a>
 <a href="https://github.com/chongjiazhen"><img src="https://images.weserv.nl/?url=github.com/chongjiazhen.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@chongjiazhen" /></a>
 <a href="https://github.com/vjsai"><img src="https://images.weserv.nl/?url=github.com/vjsai.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@vjsai" /></a>
 <a href="https://github.com/long2ice"><img src="https://images.weserv.nl/?url=github.com/long2ice.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@long2ice" /></a>
@@ -439,6 +457,9 @@ Contributors very welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the dev lo
 <a href="https://github.com/UrbsKali"><img src="https://images.weserv.nl/?url=github.com/UrbsKali.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@UrbsKali" /></a>
 <a href="https://github.com/hb-0"><img src="https://images.weserv.nl/?url=github.com/hb-0.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@hb-0" /></a>
 <a href="https://github.com/xyblue135"><img src="https://images.weserv.nl/?url=github.com/xyblue135.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@xyblue135" /></a>
+<a href="https://github.com/Icesenator"><img src="https://images.weserv.nl/?url=github.com/Icesenator.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@Icesenator" /></a>
+<a href="https://github.com/ZER0-auto"><img src="https://images.weserv.nl/?url=github.com/ZER0-auto.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@ZER0-auto" /></a>
+<a href="https://github.com/tashdroid"><img src="https://images.weserv.nl/?url=github.com/tashdroid.png&w=40&h=40&fit=cover&mask=circle" width="40" alt="@tashdroid" /></a>
 
 ## Disclaimer
 

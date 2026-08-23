@@ -1,7 +1,9 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
-import { getUnifiedApiKey, regenerateUnifiedKey, getSetting, setSetting } from '../db/index.js';
-import { applyProxyUrl, applyProxyEnabled, applyProxyBypass, isProxyActive, getProxyUrl, isProxyEnabled, getProxyBypassPlatforms, PROXY_SCHEMES } from '../lib/proxy.js';
+import { getUnifiedApiKey, regenerateUnifiedKey, getSetting, setSetting, getDb } from '../db/index.js';
+import { applyProxyUrl, applyProxyEnabled, applyProxyBypass, isProxyActive, getProxyUrl, isProxyEnabled, getProxyBypassPlatforms, probeProxyUrl, DEFAULT_PROXY_PROBE_TARGET, PROXY_SCHEMES } from '../lib/proxy.js';
+import { getProvider } from '../providers/index.js';
+import type { Platform } from '@freellmapi/shared/types.js';
 import { getSavedFusionConfig, setSavedFusionConfig, savedFusionConfigSchema, getFusionMaxK } from '../services/fusion.js';
 import { isUnifyEnabled, setUnifyEnabled, getUnifyOverrides, setUnifyOverrides, unifyOverridesSchema } from '../services/model-groups.js';
 import { getClaudeModelMap, setClaudeModelMap } from '../services/anthropic-map.js';
@@ -20,6 +22,7 @@ import {
   getCompressionConfig,
   setCompressionConfig,
 } from '../services/compression/config.js';
+import { getHeadroomThresholds, setHeadroomThresholds } from '../services/router.js';
 import { z } from 'zod';
 import { getAppVersion } from '../lib/app-version.js';
 import {
@@ -278,6 +281,40 @@ const guardrailsPutSchema = z.object({
   maxConsecutiveUpstreamFails: z.number().int().min(0).optional(),
 });
 
+// Get the headroom guardrail thresholds (#899): the remaining-budget fraction
+// at which proactive demotion begins and the score floor at 0 remaining. Both
+// are decimals (0.2 = 20%). null = the scoring.ts default is in effect.
+settingsRouter.get('/headroom', (_req: Request, res: Response) => {
+  const { rampStart, floor } = getHeadroomThresholds();
+  res.json({ rampStart: rampStart ?? null, floor: floor ?? null });
+});
+
+const headroomPutSchema = z.object({
+  rampStart: z.number().min(0).max(1).nullable().optional(),
+  floor: z.number().min(0).max(1).nullable().optional(),
+});
+
+// Update the headroom guardrail thresholds. null clears a threshold back to the
+// scoring.ts default. Takes effect on the next request — no restart needed.
+settingsRouter.put('/headroom', (req: Request, res: Response) => {
+  const parsed = headroomPutSchema.safeParse(req.body);
+  if (!parsed.success) {
+    const detail = parsed.error.errors
+      .map(e => (e.path.length ? `${e.path.join('.')}: ${e.message}` : e.message))
+      .slice(0, 5)
+      .join(', ');
+    res.status(400).json({ error: { message: `Invalid headroom thresholds: ${detail}`, type: 'invalid_request_error' } });
+    return;
+  }
+  try {
+    setHeadroomThresholds(parsed.data.rampStart, parsed.data.floor);
+    const { rampStart, floor } = getHeadroomThresholds();
+    res.json({ rampStart: rampStart ?? null, floor: floor ?? null });
+  } catch (err: any) {
+    res.status(400).json({ error: { message: `Invalid headroom thresholds: ${err.message}`, type: 'invalid_request_error' } });
+  }
+});
+
 // Update the guardrails. Partial: send just the knob you want to change.
 // Takes effect on the next request — no restart needed. 0 disables a knob.
 settingsRouter.put('/guardrails', (req: Request, res: Response) => {
@@ -375,4 +412,53 @@ settingsRouter.put('/proxy', (req: Request, res: Response) => {
     bypassPlatforms: getProxyBypassPlatforms(),
     active: isProxyActive(),
   });
+});
+
+// Test proxy connectivity WITHOUT saving (#863). The dashboard's "Test" button
+// sends the DRAFT value; an empty body falls back to the saved proxy URL. The
+// probe never persists anything — it only builds a throwaway dispatcher and
+// measures a round trip through the (draft or saved) proxy.
+/**
+ * What the proxy probe should call.
+ *
+ * The question the Test button answers is "can outbound traffic from THIS
+ * install reach the upstreams it routes to", so the target is the /models
+ * endpoint of a provider the operator actually holds an enabled key for —
+ * preferring one that is not bypassing the proxy, since a bypassed platform
+ * would not exercise the proxy at all. PROXY_TEST_URL overrides everything for
+ * air-gapped or mirror-only deployments. With no keys at all there is no
+ * upstream to name, and only then does the neutral fallback apply.
+ */
+function proxyProbeTarget(): string {
+  const override = (process.env.PROXY_TEST_URL ?? '').trim();
+  if (override) return override;
+
+  let platforms: { platform: string }[] = [];
+  try {
+    platforms = getDb().prepare(
+      `SELECT DISTINCT platform FROM api_keys WHERE enabled = 1 ORDER BY platform`,
+    ).all() as { platform: string }[];
+  } catch {
+    return DEFAULT_PROXY_PROBE_TARGET;
+  }
+
+  const bypassed = new Set(getProxyBypassPlatforms());
+  const candidates = [
+    ...platforms.filter(row => !bypassed.has(row.platform)),
+    ...platforms.filter(row => bypassed.has(row.platform)),
+  ];
+  for (const row of candidates) {
+    // 'custom' has no single registered base URL, and a provider may expose no
+    // OpenAI-style catalog route at all; skip rather than invent one.
+    if (row.platform === 'custom') continue;
+    const url = (getProvider(row.platform as Platform) as { modelsUrl?: string } | undefined)?.modelsUrl;
+    if (typeof url === 'string' && /^https?:\/\//i.test(url)) return url;
+  }
+  return DEFAULT_PROXY_PROBE_TARGET;
+}
+
+settingsRouter.post('/proxy/test', async (req: Request, res: Response) => {
+  const { proxyUrl } = (req.body ?? {}) as { proxyUrl?: string };
+  const result = await probeProxyUrl(proxyUrl, { targetUrl: proxyProbeTarget() });
+  res.json(result);
 });

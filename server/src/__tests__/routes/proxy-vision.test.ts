@@ -85,4 +85,12 @@ describe('Vision-aware routing (#118, #125)', () => {
     expect(body?.error?.code).not.toBe('no_vision_model');
     getDb().prepare('UPDATE models SET enabled = 1 WHERE supports_vision = 1').run();
   });
+
+  it('lets a fusion image request through routing (no 422 fusion_no_vision)', async () => {
+    // Same seed as the auto case: vision models enabled but no provider keys,
+    // so routing exhausts. The point is that fusion is NOT rejected up front.
+    const { status, body } = await post(app, '/v1/chat/completions', { ...IMAGE_MESSAGE, model: 'fusion' }, key);
+    expect(status).not.toBe(422);
+    expect(body?.error?.code).not.toBe('fusion_no_vision');
+  });
 });

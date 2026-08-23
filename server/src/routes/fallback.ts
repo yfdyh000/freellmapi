@@ -7,14 +7,15 @@ import { Router } from 'express';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { getDb } from '../db/index.js';
-import { getAllPenalties, getRoutingScores, getRoutingStrategy, setRoutingStrategy, setCustomWeights, getExploreEnabled, setExploreEnabled } from '../services/router.js';
-import { BANDIT_PRESETS, type RoutingStrategy } from '../services/scoring.js';
+import { getAllPenalties, getRoutingScores, getRoutingStrategy, setRoutingStrategy, setCustomWeights, getExploreEnabled, setExploreEnabled, getPeakHoursConfig, setPeakHoursConfig, getActiveRoutingWeights, getKeySelectionStrategy, setKeySelectionStrategy } from '../services/router.js';
+import { BANDIT_PRESETS, isValidTimezone, type RoutingStrategy } from '../services/scoring.js';
 import { parseBudget } from '../lib/budget.js';
 import { getModelGroups } from '../services/model-groups.js';
 import { getPenaltyInspector } from '../services/penalty-inspector.js';
 import { getActiveProfileId } from '../services/profile-models.js';
 import { qualifiedModelMemberId } from '../lib/endpoint-scope.js';
 import { overriddenFieldNames } from '../services/model-state.js';
+import { parseModelScope, scopeAllows } from '../lib/model-scope.js';
 
 export const fallbackRouter = Router();
 
@@ -22,7 +23,14 @@ export const fallbackRouter = Router();
 // GET  /routing → active strategy, preset weights, and the per-model score
 //                 breakdown (reliability / speed / intelligence + guardrails).
 fallbackRouter.get('/routing', (_req: Request, res: Response) => {
-  res.json(getRoutingScores());
+  const { peakHours, ...rest } = getRoutingScores();
+  res.json({
+    ...rest,
+    peakHoursAdjust: peakHours.enabled,
+    peakStartHour: peakHours.startHour,
+    peakEndHour: peakHours.endHour,
+    peakTimezone: peakHours.timezone,
+  });
 });
 
 fallbackRouter.get('/penalty-inspector', (_req: Request, res: Response) => {
@@ -40,6 +48,17 @@ const routingSchema = z.object({
   }).optional(),
   // Exploration toggle: give unmeasured models a guaranteed chance to be tried.
   exploreEnabled: z.boolean().optional(),
+  // Peak-hours adjustment (#760), off by default. Hours are whole numbers in
+  // 0-23 and are read in `peakTimezone`, never the server's local clock, so the
+  // window means the same thing on a UTC container as on the operator's laptop.
+  peakHoursAdjust: z.boolean().optional(),
+  peakStartHour: z.number().int().min(0).max(23, { message: 'peakStartHour must be an integer between 0 and 23' }).optional(),
+  peakEndHour: z.number().int().min(0).max(23, { message: 'peakEndHour must be an integer between 0 and 23' }).optional(),
+  peakTimezone: z.string().refine(isValidTimezone, { message: 'peakTimezone must be a valid IANA timezone name' }).optional(),
+  // How to pick between several keys of one platform (#919). Independent of
+  // `strategy`, which ranks MODELS — the two are set from the same form, so
+  // they round-trip through the same request.
+  keySelectionStrategy: z.enum(['auto', 'least-remaining']).optional(),
 });
 
 // PUT /routing → switch strategy. Presets are just weight vectors over the three
@@ -65,7 +84,38 @@ fallbackRouter.put('/routing', (req: Request, res: Response) => {
   if (parsed.data.exploreEnabled !== undefined) {
     setExploreEnabled(parsed.data.exploreEnabled);
   }
-  res.json({ strategy: getRoutingStrategy(), exploreEnabled: getExploreEnabled(), presets: BANDIT_PRESETS });
+  if (parsed.data.keySelectionStrategy !== undefined) {
+    setKeySelectionStrategy(parsed.data.keySelectionStrategy);
+  }
+  try {
+    setPeakHoursConfig({
+      enabled: parsed.data.peakHoursAdjust,
+      startHour: parsed.data.peakStartHour,
+      endHour: parsed.data.peakEndHour,
+      timezone: parsed.data.peakTimezone,
+    });
+  } catch (err: any) {
+    res.status(400).json({ error: { message: err?.message ?? 'Invalid peak-hours settings' } });
+    return;
+  }
+  // `presets` is the raw preset table (unchanged); `weights` is what the router
+  // will actually use right now, which differs from the preset while the
+  // peak-hours adjustment is firing. Returning both keeps the echo honest
+  // without breaking clients that read `presets` (#760).
+  const active = getActiveRoutingWeights();
+  const peak = getPeakHoursConfig();
+  res.json({
+    strategy: getRoutingStrategy(),
+    exploreEnabled: getExploreEnabled(),
+    keySelectionStrategy: getKeySelectionStrategy(),
+    presets: BANDIT_PRESETS,
+    weights: active.weights,
+    peakAdjusted: active.adjusted,
+    peakHoursAdjust: peak.enabled,
+    peakStartHour: peak.startHour,
+    peakEndHour: peak.endHour,
+    peakTimezone: peak.timezone,
+  });
 });
 
 // Get fallback chain (with dynamic penalties)
@@ -395,4 +445,154 @@ fallbackRouter.get('/token-usage', (_req: Request, res: Response) => {
     totalUsed,
     models: modelBudgets,
   });
+});
+
+// Per-model time-window rate-limit usage (RPM/RPD/TPM: used vs limit), for the
+// dashboard's remaining-quota display (#876). The monthly-budget metric says
+// nothing about windowed limits, so this surfaces what the router actually
+// enforces.
+//
+// Which key's numbers to report matters. The badge answers "how close is this
+// model to being unroutable", so it has to follow the key the router would pick
+// NEXT, not the worst key on the account: a platform with one exhausted key and
+// one idle key routes fine, and reporting the exhausted one paints a red badge
+// over a model that is wide open. So we mirror the router's key eligibility
+// (`selectKeyForModel`) — enabled + healthy/unknown, model scope allows this
+// model (#657), and for a custom model the key must belong to the model's own
+// endpoint (#212, #619) — and then report the ELIGIBLE key with the most
+// headroom (lowest used/limit ratio across its windows), which is the key the
+// router lands on once the busier ones fail their gates.
+//
+// Cost: the naive shape is three SQL counts per model × key, which is thousands
+// of statements on a real catalog. All of it comes from one table, so the whole
+// page is a single grouped scan of `rate_limit_usage` over the last day.
+const RATE_LIMIT_MINUTE_MS = 60 * 1000;
+const RATE_LIMIT_DAY_MS = 24 * 60 * RATE_LIMIT_MINUTE_MS;
+
+interface KeyUsage { rpm: number; rpd: number; tpm: number }
+const NO_USAGE: KeyUsage = { rpm: 0, rpd: 0, tpm: 0 };
+
+/** used/limit for one window, or null when the model has no such limit. */
+function windowRatio(used: number, limit: number | null): number | null {
+  if (limit == null || limit <= 0) return null;
+  return used / limit;
+}
+
+/** The busiest window of one key: what would reject this key's next request. */
+function keyPressure(usage: KeyUsage, limits: { rpm: number | null; rpd: number | null; tpm: number | null }): number {
+  let worst = 0;
+  for (const r of [
+    windowRatio(usage.rpm, limits.rpm),
+    windowRatio(usage.rpd, limits.rpd),
+    windowRatio(usage.tpm, limits.tpm),
+  ]) {
+    if (r !== null && r > worst) worst = r;
+  }
+  return worst;
+}
+
+fallbackRouter.get('/rate-limit-usage', (_req: Request, res: Response) => {
+  const db = getDb();
+  const now = Date.now();
+
+  const models = db.prepare(`
+    SELECT id AS model_db_id, platform, model_id, key_id, rpm_limit, rpd_limit, tpm_limit
+      FROM models
+     WHERE enabled = 1
+  `).all() as Array<{
+    model_db_id: number;
+    platform: string;
+    model_id: string;
+    key_id: number | null;
+    rpm_limit: number | null;
+    rpd_limit: number | null;
+    tpm_limit: number | null;
+  }>;
+
+  // Every key row once: the routable pool needs enabled+healthy rows, while the
+  // custom-endpoint pool is keyed on base_url and has to resolve a model's own
+  // key_id even when that row is disabled.
+  const allKeys = db.prepare(`
+    SELECT id, platform, base_url, model_scope_json, enabled, status FROM api_keys
+  `).all() as Array<{
+    id: number;
+    platform: string;
+    base_url: string | null;
+    model_scope_json: string | null;
+    enabled: number;
+    status: string;
+  }>;
+
+  const baseUrlByKeyId = new Map(allKeys.map(k => [k.id, k.base_url]));
+  const routableByPlatform = new Map<string, Array<{ id: number; baseUrl: string | null; scope: Set<string> | null }>>();
+  for (const k of allKeys) {
+    if (k.enabled !== 1 || (k.status !== 'healthy' && k.status !== 'unknown')) continue;
+    const list = routableByPlatform.get(k.platform) ?? [];
+    list.push({ id: k.id, baseUrl: k.base_url, scope: parseModelScope(k.model_scope_json) });
+    routableByPlatform.set(k.platform, list);
+  }
+
+  // One grouped scan replaces three counts per model × key. Same windows the
+  // ratelimit service enforces: a sliding minute for RPM/TPM, a sliding day for
+  // RPD. Rows older than a day are pruned on write, but the WHERE keeps this
+  // correct even if a prune has not run yet.
+  const usageRows = db.prepare(`
+    SELECT platform, model_id, key_id,
+           SUM(CASE WHEN kind = 'request' AND created_at_ms > ? THEN 1 ELSE 0 END) AS rpm_used,
+           SUM(CASE WHEN kind = 'request' THEN 1 ELSE 0 END) AS rpd_used,
+           SUM(CASE WHEN kind = 'tokens' AND created_at_ms > ? THEN tokens ELSE 0 END) AS tpm_used
+      FROM rate_limit_usage
+     WHERE created_at_ms > ?
+     GROUP BY platform, model_id, key_id
+  `).all(now - RATE_LIMIT_MINUTE_MS, now - RATE_LIMIT_MINUTE_MS, now - RATE_LIMIT_DAY_MS) as Array<{
+    platform: string; model_id: string; key_id: number;
+    rpm_used: number; rpd_used: number; tpm_used: number;
+  }>;
+  const usageByKey = new Map<string, KeyUsage>();
+  for (const u of usageRows) {
+    usageByKey.set(`${u.platform}\u0000${u.model_id}\u0000${u.key_id}`, {
+      rpm: u.rpm_used, rpd: u.rpd_used, tpm: u.tpm_used,
+    });
+  }
+
+  const rows = models.map(m => {
+    const limits = { rpm: m.rpm_limit, rpd: m.rpd_limit, tpm: m.tpm_limit };
+    const pool = routableByPlatform.get(m.platform) ?? [];
+    // A custom model belongs to one endpoint; only that endpoint's credentials
+    // can serve it. Legacy rows (key_id NULL) keep the any-key match.
+    const endpointBaseUrl = m.platform === 'custom' && m.key_id != null
+      ? baseUrlByKeyId.get(m.key_id) ?? null
+      : null;
+
+    let best: KeyUsage | null = null;
+    let bestPressure = Infinity;
+    for (const k of pool) {
+      if (!scopeAllows(k.scope, m.model_id)) continue;
+      if (m.platform === 'custom' && m.key_id != null) {
+        if (endpointBaseUrl == null ? k.id !== m.key_id : k.baseUrl !== endpointBaseUrl) continue;
+      }
+      const usage = usageByKey.get(`${m.platform}\u0000${m.model_id}\u0000${k.id}`) ?? NO_USAGE;
+      const pressure = keyPressure(usage, limits);
+      if (pressure < bestPressure) {
+        bestPressure = pressure;
+        best = usage;
+      }
+    }
+
+    // No routable key at all: the model cannot be served, and a usage number
+    // would be fiction. Report no windows so the dashboard shows no badge.
+    if (!best) {
+      return { modelDbId: m.model_db_id, platform: m.platform, modelId: m.model_id, rpm: null, rpd: null, tpm: null };
+    }
+    return {
+      modelDbId: m.model_db_id,
+      platform: m.platform,
+      modelId: m.model_id,
+      rpm: m.rpm_limit != null ? { used: best.rpm, limit: m.rpm_limit } : null,
+      rpd: m.rpd_limit != null ? { used: best.rpd, limit: m.rpd_limit } : null,
+      tpm: m.tpm_limit != null ? { used: best.tpm, limit: m.tpm_limit } : null,
+    };
+  });
+
+  res.json({ generatedAtMs: now, rows });
 });

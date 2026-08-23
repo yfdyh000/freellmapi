@@ -17,6 +17,7 @@ import { registerCustomModels, registerCustomChatModels } from '../services/cust
 import { discoverEndpointModels, probeEndpointModel, ModelDiscoveryError } from '../services/model-discovery.js';
 import { probeEmbeddingDimensions, registerCustomEmbeddingModel } from '../services/embeddings.js';
 import { endpointScopeForBaseUrl, normalizeBaseUrl } from '../lib/endpoint-scope.js';
+import { recordCustomModelTombstone } from '../services/custom-model-tombstone.js';
 import type { Db } from '../db/types.js';
 import { parseModelScope } from '../lib/model-scope.js';
 import { KEY_PROXY_URL_ERROR, KEY_PROXY_URL_MAX, decryptProxyUrl, encryptProxyUrl, isValidKeyProxyUrl, maskProxyUrl } from '../lib/key-proxy.js';
@@ -28,10 +29,11 @@ export const keysRouter = Router();
 // was dropped in V4 and re-added in V13 via the router.huggingface.co route.
 // SambaNova was dropped in V23 (free tier permanently retired).
 const PLATFORMS = [
-  'google', 'groq', 'cerebras', 'nvidia', 'mistral',
+  'google', 'groq', 'cerebras', 'bai', 'nvidia', 'mistral',
   'openrouter', 'github', 'cohere', 'cloudflare', 'zhipu', 'ollama',
   'kilo', 'pollinations', 'llm7', 'huggingface', 'opencode', 'ovh', 'agnes', 'reka', 'siliconflow',
-  'routeway', 'bazaarlink', 'ainative', 'aion', 'anyapi', 'requesty', 'navy', 'nara', 'sealion', 'modelscope', 'aihorde', 'custom',
+  'routeway', 'bazaarlink', 'ainative', 'aion', 'anyapi', 'requesty', 'navy', 'nara', 'sealion', 'orcarouter', 'unorouter', 'xkiro', 'modelscope',
+  'qianfan', 'volcengine', 'longcat', 'xfyun', 'aihorde', 'custom',
 ] as const;
 
 const ALLOWED_IMPORT_EXTENSIONS = new Set(['.env', '.json', '.jsonc', '.md', '.txt', '.csv']);
@@ -286,8 +288,8 @@ keysRouter.get('/', (_req: Request, res: Response) => {
   }
   for (const list of modelsByEndpoint.values()) {
     list.sort((a, b) => {
-      const ka = ['chat', 'embedding', 'image', 'audio'].indexOf(a.kind);
-      const kb = ['chat', 'embedding', 'image', 'audio'].indexOf(b.kind);
+      const ka = ['chat', 'embedding', 'image', 'audio', 'transcription'].indexOf(a.kind);
+      const kb = ['chat', 'embedding', 'image', 'audio', 'transcription'].indexOf(b.kind);
       return (ka - kb) || String(a.displayName).localeCompare(String(b.displayName));
     });
   }
@@ -878,9 +880,13 @@ keysRouter.post('/custom/probe', async (req: Request, res: Response) => {
   // (#619), and knowing the id up front also skips the discovery round-trip.
   // Only an endpoint with nothing registered falls back to discovery.
   let registeredModelId: string | null = null;
+  // The endpoint's key pool, hoisted so the capability write-back below can
+  // scope its UPDATE to the same keys (an unscoped model_id match would touch
+  // every unrelated custom endpoint that happens to serve the same id).
+  let poolIds: number[] = [];
   if (endpoint.keyId != null) {
     const db = getDb();
-    const poolIds = [...customEndpointKeyIds(db, endpoint.keyId)];
+    poolIds = [...customEndpointKeyIds(db, endpoint.keyId)];
     const placeholders = poolIds.map(() => '?').join(', ');
     const row = db.prepare(
       `SELECT model_id FROM models WHERE platform = 'custom' AND key_id IN (${placeholders}) ORDER BY id LIMIT 1`,
@@ -904,7 +910,32 @@ keysRouter.post('/custom/probe', async (req: Request, res: Response) => {
       clearCooldownsForKey(endpoint.keyId);
     }
 
-    res.json({ modelId: probe.modelId, latencyMs: probe.latencyMs });
+    // Phase 1 (#874): a successful tool-call probe is positive evidence the
+    // model speaks the OpenAI tool-call protocol — write it back to the models
+    // row so the tool-aware router can pick it. Only a POSITIVE result writes
+    // (the "only write success samples" philosophy); a negative/unknown result
+    // leaves the existing flag untouched.
+    //
+    // Scoped to THIS endpoint's key pool: `model_id` alone is not unique across
+    // custom endpoints (two relays both serving 'gpt-4o-mini' are two different
+    // upstreams), so an unscoped UPDATE would claim tool support for endpoints
+    // that were never probed.
+    if (probe.toolCalls && poolIds.length > 0) {
+      const placeholders = poolIds.map(() => '?').join(', ');
+      getDb().prepare(
+        `UPDATE models SET supports_tools = 1
+          WHERE platform = 'custom' AND model_id = ? AND key_id IN (${placeholders})`,
+      ).run(probe.modelId, ...poolIds);
+    }
+
+    // Response stays { modelId, latencyMs } for backward compat; capability
+    // flags ride along as optional fields the client can opt to render.
+    res.json({
+      modelId: probe.modelId,
+      latencyMs: probe.latencyMs,
+      ...(probe.reasoning !== undefined ? { reasoning: probe.reasoning } : {}),
+      ...(probe.toolCalls !== undefined ? { toolCalls: probe.toolCalls } : {}),
+    });
   } catch (err: any) {
     if (err instanceof ModelDiscoveryError) {
       res.status(err.status).json({ error: { message: err.message } });
@@ -1317,6 +1348,12 @@ keysRouter.delete('/:id', (req: Request, res: Response) => {
     // so they never linger in the fallback chain forever (#189).
     if (row.platform === 'custom') {
       const defaultEmbedding = db.prepare("SELECT value FROM settings WHERE key = 'embeddings_default_family'").get() as { value: string } | undefined;
+      // #926: the scheduled custom-model sync only knows a model by "is it in
+      // the table yet". Without a tombstone, a key the operator deleted to get
+      // rid of its models would have them all re-registered by the next pass.
+      const scope = endpointScopeForBaseUrl(row.base_url);
+      const doomed = db.prepare("SELECT model_id FROM models WHERE platform = 'custom' AND key_id = ?").all(id) as { model_id: string }[];
+      for (const m of doomed) recordCustomModelTombstone(db, scope, m.model_id);
       db.prepare("DELETE FROM fallback_config WHERE model_db_id IN (SELECT id FROM models WHERE platform = 'custom' AND key_id = ?)").run(id);
       db.prepare("DELETE FROM models WHERE platform = 'custom' AND key_id = ?").run(id);
       db.prepare("DELETE FROM embedding_models WHERE platform = 'custom' AND key_id = ?").run(id);

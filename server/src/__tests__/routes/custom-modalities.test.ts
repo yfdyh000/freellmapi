@@ -159,6 +159,35 @@ describe('custom provider modalities', () => {
     ]);
   });
 
+  it('registers a custom speech-to-text (transcription) model', async () => {
+    const stt = await post(app, '/api/media/custom', {
+      baseUrl: 'http://127.0.0.1:8787/v1',
+      model: 'local-stt',
+      modality: 'transcription',
+      displayName: 'Local Whisper',
+      apiKey: 'stt-se…cret',
+      label: 'Local STT',
+    });
+
+    expect(stt.status).toBe(201);
+    expect(stt.body.modality).toBe('transcription');
+    expect(stt.body.displayName).toBe('Local Whisper');
+
+    const row = getDb().prepare(`
+      SELECT model_id, modality, display_name, key_id
+        FROM media_models
+       WHERE platform = 'custom' AND model_id = 'local-stt'
+    `).get() as any;
+    expect(row.modality).toBe('transcription');
+    expect(row.display_name).toBe('Local Whisper');
+    expect(row.key_id).toBe(stt.body.keyId);
+
+    // It is listed under the endpoint key like any other modality.
+    const keys = await get(app, '/api/keys');
+    const custom = keys.body.find((k: any) => k.platform === 'custom' && k.baseUrl === 'http://127.0.0.1:8787/v1');
+    expect(custom.models.map((m: any) => `${m.kind}:${m.modelId}`)).toEqual(['transcription:local-stt']);
+  });
+
   it('lists chat, embedding, image, and audio models under their custom endpoint key', async () => {
     const fetchMock = vi.fn(async () => embeddingResponse(3));
     globalThis.fetch = fetchMock as any;

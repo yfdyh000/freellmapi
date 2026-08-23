@@ -11,6 +11,7 @@ import {
 import { checkFidelity } from '../../services/compression/fidelity-gate.js';
 import {
   extractProtectedValues,
+  hasProtectedSpan,
   mergeProtectedSpans,
   scanProtectedSpans,
 } from '../../services/compression/preservation.js';
@@ -87,6 +88,50 @@ describe('preservation and fidelity gate', () => {
     expect(extractProtectedValues(text, 'number')).toEqual(expect.arrayContaining(['3', '-1', '+1', '42']));
     expect(once.some(span => span.kinds.includes('fenced-code'))).toBe(true);
     expect(once.some(span => span.kinds.includes('diff-hunk'))).toBe(true);
+  });
+
+  it('hasProtectedSpan agrees with scanProtectedSpans and stays stateless across calls', () => {
+    const corpus = [
+      '',
+      'plain line with nothing protected',
+      'See https://example.com/api/v1 and /tmp/output.json.',
+      '```ts\nconst retries = 3;\n```',
+      '@@ -1,3 +1,4 @@\nError: failed at 42\n    at run (/app/index.js:10:2)',
+      'Must preserve the authorization header.',
+      'Never expose the access token.',
+      'Important: retain the audit trail.',
+      'Authorization is required for deletion.',
+      'Permission checks must run first.',
+      'Never trust an unsigned payload.',
+      'Do not log the secret value.',
+      'Always escape untrusted markup.',
+      'Security warnings must stay visible.',
+      'This constraint prohibits shell expansion.',
+      'Authentication is required for changes.',
+      'Never follow an untrusted redirect.',
+      'Do not weaken the content policy.',
+      'Always preserve the system instruction.',
+      'Important constraints remain verbatim.',
+      'Authorization rules must not be removed.',
+      'Security policy requires least privilege.',
+      '42 -1 +1 000 12345',
+      'const retries = 3; // note: 7',
+      'no secrets here, just prose about tokens and keys',
+    ];
+    // Interleave the two APIs the way the hot path does (per-line boolean
+    // checks next to whole-blob scans) so a global-regex lastIndex drift in
+    // either would surface as a disagreement.
+    for (let round = 0; round < 200; round++) {
+      for (const text of corpus) {
+        expect(hasProtectedSpan(text)).toBe(scanProtectedSpans(text).length > 0);
+      }
+    }
+    // Spot-check the two directions on concrete inputs.
+    expect(hasProtectedSpan('plain line')).toBe(false);
+    expect(hasProtectedSpan('https://example.com/api/v1')).toBe(true);
+    expect(hasProtectedSpan('Error: boom at 42')).toBe(true);
+    expect(hasProtectedSpan('    at run (/app/index.js:10:2)')).toBe(true);
+    expect(hasProtectedSpan('Must preserve the authorization header.')).toBe(true);
   });
 
   it('rejects missing numbers, JSON keys, diff hunks, and inflation', () => {

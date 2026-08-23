@@ -498,6 +498,7 @@ describe('OpenAICompatProvider - platform instances', () => {
   const platforms = [
     { platform: 'groq',       name: 'Groq',          baseUrl: 'https://api.groq.com/openai/v1' },
     { platform: 'cerebras',   name: 'Cerebras',      baseUrl: 'https://api.cerebras.ai/v1' },
+    { platform: 'bai',        name: 'B.AI',          baseUrl: 'https://api.b.ai/v1' },
     { platform: 'anyapi',     name: 'AnyAPI',        baseUrl: 'https://api.anyapi.ai/v1' },
     { platform: 'nvidia',     name: 'NVIDIA NIM',    baseUrl: 'https://integrate.api.nvidia.com/v1' },
     { platform: 'mistral',    name: 'Mistral',       baseUrl: 'https://api.mistral.ai/v1' },
@@ -514,6 +515,13 @@ describe('OpenAICompatProvider - platform instances', () => {
     { platform: 'navy',       name: 'NavyAI',        baseUrl: 'https://api.navy/v1' },
     { platform: 'nara',       name: 'NaraRouter',    baseUrl: 'https://router.bynara.id/v1' },
     { platform: 'sealion',    name: 'SEA-LION',      baseUrl: 'https://api.sea-lion.ai/v1' },
+    { platform: 'orcarouter', name: 'OrcaRouter',    baseUrl: 'https://api.orcarouter.ai/v1' },
+    // unorouter's /v1/models requires auth (401 without a key), so default
+    // key validation works — no validateUrl override, unlike xkiro.
+    { platform: 'unorouter', name: 'UnoRouter',      baseUrl: 'https://api.unorouter.com/v1' },
+    // xkiro validates against /v1/usage (its /v1/models is public — 200 with no
+    // key), so it carries a validateUrl; chat routing is stock openai-compat.
+    { platform: 'xkiro',      name: 'xKiro',         baseUrl: 'https://api.xkiro.com/v1' },
     // modelscope registers a ModelScopeProvider subclass (custom validateKey,
     // see providers/modelscope.test.ts) but chat routing is stock openai-compat.
     { platform: 'modelscope', name: 'ModelScope',    baseUrl: 'https://api-inference.modelscope.cn/v1' },

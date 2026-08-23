@@ -55,7 +55,7 @@ function mockUpstream(script: Array<{ body: string; status?: number }>) {
     const urlStr = typeof url === 'string' ? url : url.toString();
     // Only intercept provider upstreams; the test's own localhost request
     // and anything else goes through.
-    if (!/api\.groq\.com|openrouter\.ai|api\.cohere|generativelanguage|integrate\.api\.nvidia|api\.cerebras|api\.mistral|router\.huggingface|api\.cloudflare|models\.github|open\.bigmodel|api\.llm7|api\.kilo|gen\.pollinations|ollama\.com|opencode\.ai|api\.aionlabs\.ai|router\.requesty\.ai|api\.navy|router\.bynara\.id/.test(urlStr)) {
+    if (!/api\.groq\.com|openrouter\.ai|api\.cohere|generativelanguage|integrate\.api\.nvidia|api\.cerebras|api\.b\.ai|api\.mistral|router\.huggingface|api\.cloudflare|models\.github|open\.bigmodel|api\.llm7|api\.kilo|gen\.pollinations|ollama\.com|opencode\.ai|api\.aionlabs\.ai|router\.requesty\.ai|api\.navy|router\.bynara\.id/.test(urlStr)) {
       return origFetch(url as any, init);
     }
     const reqBody = JSON.parse(String((init as RequestInit).body));
@@ -300,6 +300,79 @@ describe('proxy stream turn-integrity', () => {
       "SELECT COALESCE(SUM(tokens), 0) AS total FROM rate_limit_usage WHERE kind = 'tokens'",
     ).get() as { total: number };
     expect(ledger.total).toBe(3278);
+  });
+
+  // Not every provider sends usage on a frame of its own: several attach it to
+  // the last choice-bearing frame instead. Reading it only off choice-less
+  // frames silently discarded those real counts and billed the chars/4
+  // estimate.
+  it('records usage bundled onto the final choice-bearing frame', async () => {
+    const usage = { prompt_tokens: 1111, completion_tokens: 22, total_tokens: 1133 };
+    mockUpstream([{
+      body: sse(
+        roleChunk,
+        textChunk('Hello'),
+        { ...finishChunk('stop'), usage },
+        '[DONE]',
+      ),
+    }]);
+
+    const r = await request(app, '/v1/chat/completions', {
+      stream: true,
+      stream_options: { include_usage: true },
+      messages: [{ role: 'user', content: 'bundled usage on the finish frame' }],
+    });
+
+    expect(r.status).toBe(200);
+    const fs = frames(r.text);
+    // Exactly one usage frame, emitted last, and it carries no duplicated turn.
+    const withUsage = fs.filter(f => f.usage);
+    expect(withUsage).toHaveLength(1);
+    expect(withUsage[0].usage).toEqual(usage);
+    expect(fs[fs.length - 1]).toBe(withUsage[0]);
+    expect(withUsage[0].choices).toEqual([]);
+    // The turn itself is unchanged: one terminal finish_reason, text intact.
+    expect(fs.map(f => f.choices?.[0]?.delta?.content ?? '').join('')).toBe('Hello');
+    expect(fs.map(f => f.choices?.[0]?.finish_reason).filter(Boolean)).toEqual(['stop']);
+
+    const row = getDb().prepare(
+      "SELECT input_tokens, output_tokens FROM requests WHERE status = 'success' ORDER BY id DESC LIMIT 1",
+    ).get() as { input_tokens: number; output_tokens: number };
+    expect(row).toEqual({ input_tokens: 1111, output_tokens: 22 });
+
+    const ledger = getDb().prepare(
+      "SELECT COALESCE(SUM(tokens), 0) AS total FROM rate_limit_usage WHERE kind = 'tokens'",
+    ).get() as { total: number };
+    expect(ledger.total).toBe(1133);
+  });
+
+  it('never emits usage twice when it rides a forwarded content frame', async () => {
+    const usage = { prompt_tokens: 7, completion_tokens: 8, total_tokens: 15 };
+    mockUpstream([{
+      body: sse(
+        roleChunk,
+        textChunk('Hello'),
+        { ...textChunk(' world'), usage },
+        finishChunk('stop'),
+        '[DONE]',
+      ),
+    }]);
+
+    const r = await request(app, '/v1/chat/completions', {
+      stream: true,
+      stream_options: { include_usage: true },
+      messages: [{ role: 'user', content: 'usage riding a content frame' }],
+    });
+
+    const fs = frames(r.text);
+    expect(fs.filter(f => f.usage)).toHaveLength(1);
+    expect(fs[fs.length - 1].usage).toEqual(usage);
+    // The content frame it arrived on is forwarded WITHOUT usage — the held
+    // copy is the single, last one the client sees (OpenAI ordering).
+    const contentFrame = fs.find(f => f.choices?.[0]?.delta?.content === ' world');
+    expect(contentFrame).toBeDefined();
+    expect(contentFrame).not.toHaveProperty('usage');
+    expect(fs.map(f => f.choices?.[0]?.delta?.content ?? '').join('')).toBe('Hello world');
   });
 
   it('rescues a non-streaming inline dialect answer into structured tool_calls', async () => {
