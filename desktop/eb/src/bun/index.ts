@@ -91,7 +91,7 @@ function encodeStrings(plain: Record<string, string>): Record<string, string> {
 // 0.0.0.0). Enabling shows a one-time warning: the API becomes reachable by
 // anything that can route to this machine, guarded only by the unified key.
 // Mirrors toggleLanAccess in ../src/main.ts. Electrobun has no app.relaunch(),
-// so the launcher (process.execPath) is respawned detached and this process
+// so the launcher (bin/launcher.exe) is respawned detached and this process
 // exits, exactly like the Updater's restart flow.
 async function toggleLanAccess(): Promise<void> {
   const current = loadConfig().lanAccess ?? false;
@@ -114,7 +114,17 @@ async function toggleLanAccess(): Promise<void> {
     if (response !== 0) return;
   }
   saveConfig({ ...loadConfig(), lanAccess: enabling });
-  const launcher = process.execPath;
+  // In the packaged app the launcher is <appRoot>/bin/launcher.exe; in dev
+  // mode (bunx electrobun dev) process.execPath is the correct entry point.
+  const launcher = (() => {
+    let dir = import.meta.dir;
+    for (let depth = 0; depth < 6; depth++) {
+      const candidate = path.join(dir, "bin", "launcher.exe");
+      if (fs.existsSync(candidate)) return candidate;
+      dir = path.dirname(dir);
+    }
+    return process.execPath;
+  })();
   try {
     Bun.spawn([launcher], { detached: true, stdout: "ignore", stderr: "ignore", stdin: "ignore" });
   } catch (err) {
