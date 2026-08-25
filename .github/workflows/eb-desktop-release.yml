@@ -66,8 +66,11 @@ jobs:
       - name: Build client
         run: npm run build -w client
 
+      # Default (pwsh) shell rather than bash: Git Bash puts its own MSYS tar
+      # first on PATH, which reads the D:\ drive prefix as a remote host and
+      # fails with "Cannot connect to D: resolve failed" when hutch extracts
+      # its downloads.
       - name: Build Electrobun app
-        shell: bash
         run: |
           cd desktop
           # client/dist is picked up automatically by the config's
