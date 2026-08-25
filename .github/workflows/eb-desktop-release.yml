@@ -46,9 +46,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Node >= 22 so prebuild-install finds a better-sqlite3 binary (v12.x no
+      # longer ships node-v115/Node 20 assets); on Node 20 it falls back to a
+      # source build, which fails because the pinned @electron/node-gyp does
+      # not recognize the VS2026 on windows-latest.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install workspace dependencies
         run: npm install

@@ -63,9 +63,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Node >= 22 so prebuild-install finds a better-sqlite3 binary (v12.x no
+      # longer ships node-v115/Node 20 assets) instead of compiling from source.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       # #948: v0.8.2–v0.8.4 shipped installers stamped 0.8.1 because
       # desktop/package.json was never bumped after v0.8.1. electron-builder
