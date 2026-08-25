@@ -7,6 +7,7 @@ import { runMigrationsSync } from './migrate/runner.js';
 import { initEncryptionKey, isEncryptionKeyInitialized } from '../lib/crypto.js';
 import { restrictAllToOwner, restrictDirToOwner } from '../lib/file-permissions.js';
 import { nodeSqliteFactory } from './node-sqlite.js';
+import { bunSqliteFactory } from './bun-sqlite.js';
 import type { Db, DbFactory } from './types.js';
 
 export type { Db, DbFactory } from './types.js';
@@ -42,8 +43,13 @@ function betterSqliteFactory(resolvedPath: string): Db {
   return new BetterSqlite(resolvedPath) as Db;
 }
 
+// Same runtime detection as src/lib/proxy.ts:8 — Bun/Cottontail expose a `Bun`
+// global that Node never defines.
+const IS_BUN_LIKE = typeof Bun !== 'undefined';
+
 export function defaultDbFactory(platform: NodeJS.Platform = process.platform): DbFactory {
-  return platform === 'android' ? nodeSqliteFactory : betterSqliteFactory;
+  if (platform === 'android') return nodeSqliteFactory;
+  return IS_BUN_LIKE ? bunSqliteFactory : betterSqliteFactory;
 }
 
 export function connectDb(

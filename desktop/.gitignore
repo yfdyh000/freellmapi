@@ -2,7 +2,17 @@ node_modules/
 build/
 dist-electron/
 client-dist/
+artifacts/
 .DS_Store
+
+# Hutch (Electrobun 2.x) devkit projection and build outputs
+.hutch/
+build-eb/
+artifact-eb/
+portable-cottontail/
+portable-bun/
+FreeLLMAPI-cottontail-portable.zip
+FreeLLMAPI-*-portable.zip
 
 # Monetization planning — private, never committed
 monetization/

@@ -4,6 +4,11 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import { getSetting } from '../db/index.js';
 import { assertProviderUrlAllowed, isLoopbackOrPrivateHostname } from './url-guard.js';
 
+// Bun and Cottontail (Electrobun's JSC runtime) expose a `Bun` global and
+// their fetch() honors the private `proxy` option instead of undici's
+// `dispatcher`. Runtime branching below keeps Node untouched.
+const IS_BUN_LIKE = typeof Bun !== 'undefined';
+
 // #590 (per-key proxy): the SAME provider may be reached through different
 // exit IPs per key (geo-ban / risk-control avoidance). Providers are process
 // singletons, so the per-key override cannot live on the provider instance —
@@ -641,11 +646,25 @@ async function dispatchFetch(
     // Per-key proxy failed to build → fall through to the global/direct path.
   }
 
-  // Bypass check: disabled globally, this platform is exempt, the upstream
+// Bypass check: disabled globally, this platform is exempt, the upstream
   // host is listed in NO_PROXY, or it is a local/LAN destination no proxy can
   // reach (#951).
   if (shouldBypassProxy(url, platform)) {
     return fetch(url, init);
+  }
+
+  // Bun/Cottontail: no dispatcher objects — route using the proxy URL string
+  // directly (fetch `proxy` option / self-built SOCKS client). Skipping
+  // resolveDispatcher avoids loading undici/socks-proxy-agent, whose CJS
+  // builds crash the Cottontail module loader.
+  if (IS_BUN_LIKE) {
+    if (!_initialized) applyProxyUrl('');
+    if (!_proxyUrl) return fetch(url, init);
+    if (isSocksProxyUrl(_proxyUrl)) {
+      const socksFetch = await loadBunSocksFetch();
+      return socksFetch(url, init, _proxyUrl);
+    }
+    return fetch(url, { ...init, proxy: _proxyUrl } as unknown as RequestInit);
   }
 
   const resolved = await resolveDispatcher();
@@ -693,6 +712,21 @@ async function resolvePerKeyDispatcher(proxyUrl: string): Promise<{ dispatcher: 
     rememberPerKeyDispatcher(proxyUrl, { dispatcher: undefined, isSocks: false, ts: now });
     return undefined;
   }
+}
+
+type BunSocksFetchFn = (url: string, init: RequestInit | undefined, proxyUrl: string) => Promise<Response>;
+let _socks5Fetch: BunSocksFetchFn | null = null;
+
+/** Bun/Cottontail SOCKS path via the self-built RFC 1928 client (see vendor/).
+ *  Extension-less specifier: runtime loaders (Bun/Cottontail) resolve it to
+ *  the .ts source, and tsc's bundler resolution types it without needing
+ *  allowImportingTsExtensions. Only ever reached on the IS_BUN_LIKE branch. */
+async function loadBunSocksFetch(): Promise<BunSocksFetchFn> {
+  if (!_socks5Fetch) {
+    const mod = await import('../vendor/socks5-fetch');
+    _socks5Fetch = mod.socksFetch;
+  }
+  return _socks5Fetch;
 }
 
 /**
