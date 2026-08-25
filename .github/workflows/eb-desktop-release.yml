@@ -90,13 +90,18 @@ jobs:
           tar -xf $tarball -C $stage
           tar -a -cf "..\..\artifact-eb\win-x64-FreeLLMAPI-portable.zip" -C $stage "FreeLLMAPI"
 
-      - name: Upload windows artifacts
+      - name: Upload portable zip
         uses: actions/upload-artifact@v4
         with:
-          name: electrobun-windows
-          path: |
-            desktop/artifact-eb/win-x64-FreeLLMAPI-portable.zip
-            desktop/artifact-eb/win-x64-FreeLLMAPI-Setup.zip
+          name: FreeLLMAPI-portable-win-x64
+          path: desktop/artifact-eb/win-x64-FreeLLMAPI-portable.zip
+          if-no-files-found: error
+
+      - name: Upload installer zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreeLLMAPI-Setup-win-x64
+          path: desktop/artifact-eb/win-x64-FreeLLMAPI-Setup.zip
           if-no-files-found: error
 
       - name: Attach installer to release
