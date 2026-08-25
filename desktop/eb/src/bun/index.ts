@@ -4,6 +4,7 @@
 // await from here on is the app's startup sequence.
 import fs from "node:fs";
 import path from "node:path";
+import type { Server } from "node:http";
 import Electrobun, { BrowserView, Utils } from "electrobun/bun";
 import { startServer, ensureSessionToken, getUnifiedApiKey } from "../../../src/server-host.ts";
 import { loadConfig, saveConfig, userDataDir } from "./config.js";
@@ -17,6 +18,9 @@ import { normalizeLocale, nativeStrings, type NativeLocale } from "../../../src/
 import type { DesktopRPCSchema, SnapshotPayload } from "./rpc.js";
 
 const DEFAULT_PORT = 31415;
+// Stored so toggleLanAccess() can close the server before spawning a
+// replacement, releasing the port and preventing a +1 scan.
+let httpServer: Server | null = null;
 const RESOURCES_DIR = path.join(import.meta.dir, "..", ".."); // .../Resources (packaged) or desktop/eb (source)
 const VIEWS_DIR = path.join(import.meta.dir, "..", "views");
 
@@ -114,6 +118,9 @@ async function toggleLanAccess(): Promise<void> {
     if (response !== 0) return;
   }
   saveConfig({ ...loadConfig(), lanAccess: enabling });
+  // Release the server port so the replacement process binds the same port
+  // instead of scanning to 31416.
+  httpServer?.close();
   // In the packaged app the launcher is <appRoot>/bin/launcher.exe; in dev
   // mode (bunx electrobun dev) process.execPath is the correct entry point.
   const launcher = (() => {
@@ -211,12 +218,13 @@ const host = cfg.lanAccess ? "0.0.0.0" : "127.0.0.1";
 
 process.env.FREEAPI_VERSION = version;
 
-const { port } = await startServer({
+const { server, port } = await startServer({
   dbPath,
   clientDist,
   host,
   preferredPort: cfg.port ?? DEFAULT_PORT,
 });
+httpServer = server;
 resolvedPort = port;
 sessionToken = ensureSessionToken();
 saveConfig({ ...loadConfig(), port });
