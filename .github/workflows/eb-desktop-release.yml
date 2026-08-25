@@ -77,14 +77,26 @@ jobs:
           # clientDistCopy() (electrobun.config.ts).
           npx --no-install electrobun build --env=stable
 
-      - name: Upload installer artifact
+      # Portable zip: expand the app tarball. bin/launcher.exe alone is the
+      # Setup extractor (pops the install wizard), so the portable artifact
+      # must carry the fully expanded tree instead.
+      - name: Package portable zip
+        shell: pwsh
+        run: |
+          cd desktop/build-eb/stable-win-x64
+          $stage = Join-Path $env:RUNNER_TEMP "portable"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          $tarball = (Get-ChildItem "FreeLLMAPI/Resources/*.tar.zst").FullName
+          tar -xf $tarball -C $stage
+          tar -a -cf "..\..\artifact-eb\win-x64-FreeLLMAPI-portable.zip" -C $stage "FreeLLMAPI"
+
+      - name: Upload windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: electrobun-windows-installer
+          name: electrobun-windows
           path: |
-            desktop/artifact-eb/*
-            desktop/build-eb/stable-win-x64/*.exe
-            desktop/build-eb/stable-win-x64/*.metadata.json
+            desktop/artifact-eb/win-x64-FreeLLMAPI-portable.zip
+            desktop/artifact-eb/win-x64-FreeLLMAPI-Setup.zip
           if-no-files-found: error
 
       - name: Attach installer to release
