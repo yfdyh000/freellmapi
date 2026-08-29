@@ -141,6 +141,9 @@ export default {
     },
     mac: { bundleCEF: false },
     linux: { bundleCEF: false },
-    win: { bundleCEF: false },
+    win: {
+      bundleCEF: false,
+      icon: "assets/appicon_256.png",
+    },
   },
 } satisfies ElectrobunConfig;
